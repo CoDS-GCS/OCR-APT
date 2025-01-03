@@ -1,24 +1,20 @@
 import pandas as pd
-import numpy as np
 import argparse
 from resource import *
 import datetime
 import os
 import csv
-import pytz
 from networkx.readwrite import json_graph
 import json
-import networkx as nx
 import glob
 from database_config import get_subgraphs_attributes
-import time
 import pickle
 
 parser = argparse.ArgumentParser(description='DARPA to RDF')
-parser.add_argument('--host', type=str, default='cadets')
-parser.add_argument('--source-graph', type=str, default="cadets")
-parser.add_argument('--source-graph-nx', type=str, default="complete_cadets_pg")
-parser.add_argument('--root-path', type=str, default="../dataset/darpa_tc3/cadets/pygod/")
+parser.add_argument('--host', type=str,required=True)
+parser.add_argument('--source-graph', type=str,required=True)
+parser.add_argument('--source-graph-nx', type=str,required=True)
+parser.add_argument('--root-path', type=str,required=True)
 parser.add_argument('--adjust-uuid', action="store_true", default=False)
 
 args = parser.parse_args()
@@ -150,46 +146,3 @@ if __name__ == '__main__':
     end_time = datetime.datetime.now()
     print("Total processing time :", end_time - start_time)
     print(getrusage(RUSAGE_SELF))
-
-
-# __________________ DRAFT _____________________
-# if len(allNodes_df) > 0:
-#     for node, node_attrs in allNodes_df:
-#         attr_type = attributes[node_attrs['type'].lower()]
-#         if attr_type != "NA":
-#             attr_value = node_attrs[attr_type].split("=>")[-1].split("\\")[-1].split("/")[-1]
-#             turtle.append(["node:" + str(node), "graph:node-attribute", '"' + str(attr_value) + '"'])
-#             n_found_attrs +=1
-
-# print("Debug time is {}".format(time.time() - debug))
-
-# debug = time.time()
-# node_attrs_lst = list(provenance_graph.nodes.data())
-# filtered_node_attrs_lst = [(node, node_attrs) for node, node_attrs in node_attrs_lst if node in allNodes_lst]
-# print("Debug time is {}".format(time.time() - debug))
-# del node_attrs_lst
-# n_nodes = len(filtered_node_attrs_lst)
-# print("Number of nodes in both dataset = ", n_nodes)
-# n_found_attrs = 0
-# if len(filtered_node_attrs_lst) > 0:
-#     attributes = get_subgraphs_attributes(args.host)
-#     for node, node_attrs in filtered_node_attrs_lst:
-#         attr_type = attributes[node_attrs['type'].lower()]
-#         if attr_type != "NA":
-#             attr_value = node_attrs[attr_type].split("=>")[-1].split("\\")[-1].split("/")[-1]
-#             turtle.append(["node:" + str(node), "graph:node-attribute", '"' + str(attr_value) + '"'])
-#             n_found_attrs +=1
-# del filtered_node_attrs_lst
-
-# rdfs_df = pd.DataFrame(turtle, columns=['s', 'p', 'o', 't'])
-# del turtle
-# rdfs_df.loc[rdfs_df['t'].notna(), 's'] = rdfs_df.loc[rdfs_df['t'].notna(), 's'].apply(
-#     lambda x: "<< " + str(x))
-# rdfs_df.loc[rdfs_df['t'].notna(), 't'] = rdfs_df.loc[rdfs_df['t'].notna(), 't'].apply(
-#     lambda x: " >> " + 'graph:timestamp "' + str(x) + '"')
-# rdfs_df["end"] = "."
-
-# print("Total number of nodes in both dataset : ", total_number_of_nodes)
-
-
-# rdfs_df.to_csv(out_path,mode='a', index=None, header=None, sep="\t", quoting=csv.QUOTE_NONE, quotechar="\\",escapechar="\\")

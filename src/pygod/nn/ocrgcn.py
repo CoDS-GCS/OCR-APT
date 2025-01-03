@@ -14,20 +14,20 @@ import math
 import numpy as np
 class OCRGCNBase(nn.Module):
     """
-    One-Class Graph Neural Networks for Anomaly Detection in
-    Attributed Networks
+    cite: OCR-APT: Reconstructing APT Stories through Subgraph Anomaly Detection and LLMs
 
-    OCGNN is an anomaly detector that measures the
+    OCRGCN is an anomaly detector that measures the
     distance of anomaly to the centroid, in a similar fashion to the
     support vector machine, but in the embedding space after feeding
-    towards several layers of GCN.
+    towards several layers of RGCN.
 
-    See :cite:`wang2021one` for details.
 
     Parameters
     ----------
     in_dim : int
         Input dimension of model.
+    num_relations: int
+        Number of relations.
     hid_dim :  int, optional
         Hidden dimension of model. Default: ``64``.
     num_layers : int, optional
@@ -59,7 +59,6 @@ class OCRGCNBase(nn.Module):
                  dropout=0.,
                  act=torch.nn.functional.relu,
                  backbone=RGCNConv,
-                 # edge_weight=None,
                  beta=0.5,
                  warmup=2,
                  eps=0.001,
@@ -101,16 +100,12 @@ class OCRGCNBase(nn.Module):
         self.gnn = backbone(in_channels=in_dim,
                             out_channels=hid_dim,
                             num_relations=num_relations,
-                            # edge_weight=edge_weight,
                             **kwargs)
         self.hidden_gnn = backbone(in_channels=hid_dim,
                             out_channels=hid_dim,
                             num_relations=num_relations,
-                            # edge_weight=edge_weight,
                             **kwargs)
 
-        # self.reset_layer_parameters(self.gnn)
-        # self.reset_layer_parameters(self.hidden_gnn)
         self.r = 0
         self.c = torch.zeros(hid_dim)
 
@@ -132,7 +127,7 @@ class OCRGCNBase(nn.Module):
             Input attribute embeddings.
         edge_index : torch.Tensor
             Edge index.
-
+        edge_type
         Returns
         -------
         emb : torch.Tensor
@@ -156,7 +151,6 @@ class OCRGCNBase(nn.Module):
             if validation_f1_score > self.max_validation_f1_score:
                 self.max_validation_f1_score = validation_f1_score
                 self.counter = 0
-            # elif validation_f1_score < self.f1_baseline:
             elif (validation_f1_score < self.f1_baseline) or (validation_f1_score < (self.max_validation_f1_score - self.max_delta)):
                 self.counter = 0
             elif validation_f1_score <= self.max_validation_f1_score:
@@ -170,7 +164,6 @@ class OCRGCNBase(nn.Module):
                 if validation_auc > self.max_validation_auc:
                     self.max_validation_auc = validation_auc
                     self.counter = 0
-                # elif validation_auc <= 0.5:
                 elif (validation_auc <= 0.5) or (validation_auc < (self.max_validation_auc - self.max_delta)):
                     self.counter = 0
                 elif validation_auc <= self.max_validation_auc:
@@ -182,41 +175,12 @@ class OCRGCNBase(nn.Module):
                 if validation_TNR > self.max_validation_TNR:
                     self.counter = 0
                     self.max_validation_TNR = validation_TNR
-                # elif validation_TNR <= 0.01:
                 elif (validation_TNR <= 0.01) or (validation_TNR < self.max_validation_TNR - self.max_delta):
                     self.counter = 0
                 elif validation_TNR <= self.max_validation_TNR:
                     self.counter += 1
                     if self.counter >= self.patience:
                         return 1
-        return 0
-
-    def early_stop_f1_max(self, validation_f1_score, validation_TNR):
-        # set early stopping technique f1_score & AUC & TNR
-        if self.malicious_percentage > 0:
-            # Optimize on F1-Score when relatively balanced data
-            if validation_f1_score > self.max_validation_f1_score:
-                self.max_validation_f1_score = validation_f1_score
-                self.counter = 0
-            # elif validation_f1_score < self.f1_baseline:
-            elif (validation_f1_score < self.f1_baseline) or (validation_f1_score < (self.max_validation_f1_score - self.max_delta)):
-                self.counter = 0
-            elif validation_f1_score <= self.max_validation_f1_score:
-                self.counter += 1
-                if self.counter >= self.patience:
-                    return 1
-        else:
-            # Optimize on TNR when no malicious samples
-            if validation_TNR > self.max_validation_TNR:
-                self.counter = 0
-                self.max_validation_TNR = validation_TNR
-            # elif validation_TNR <= 0.01:
-            elif (validation_TNR <= 0.01) or (validation_TNR < self.max_validation_TNR - self.max_delta):
-                self.counter = 0
-            elif validation_TNR <= self.max_validation_TNR:
-                self.counter += 1
-                if self.counter >= self.patience:
-                    return 1
         return 0
 
     def man_confusion_matrix(self,y_true, y_pred):
@@ -244,7 +208,6 @@ class OCRGCNBase(nn.Module):
         validation_pred = validation_pred.reshape(len(validation_pred), 1)
         validation_f1_score = f1_score(y_true=label, y_pred=validation_pred, zero_division=0)
         print('Validation F1-score:', round(validation_f1_score.item(), 5))
-        # TN, FP, FN, TP = confusion_matrix(y_true= label.int(),y_pred= validation_pred,labels= [0, 1]).ravel()
         TP, FP, TN, FN = self.man_confusion_matrix(y_true= label.int(),y_pred= validation_pred)
         if (TP + FN) == 0:
             validation_TPR = None
@@ -261,9 +224,7 @@ class OCRGCNBase(nn.Module):
         if visualize:
             self.visualize(emb, label, fig_title=fig_title)
 
-        # if self.early_stop == 0:
         self.early_stop = self.early_stop_f1_auc_max(validation_auc,validation_f1_score, validation_TNR)
-        # self.early_stop = self.early_stop_f1_max(validation_f1_score, validation_TNR)
 
         self.first_epoch = False
         del validation_pred, validation_dist, validation_score
@@ -283,8 +244,6 @@ class OCRGCNBase(nn.Module):
         emb2D = transformTo2D.fit_transform(emb.detach().numpy())
         if train:
             self.c2D = transformTo2D.transform(self.c.reshape(1, -1)).reshape(-1)
-        # plt.xlim((self.c2D[0] - self.r) * 2, (self.c2D[0] + self.r) * 2)
-        # plt.ylim((self.c2D[1] - self.r) * 2, (self.c2D[1] + self.r) * 2)
         if torch.is_tensor(label):
             label = label.reshape(-1)
             benign_emb2D = emb2D[~label]
@@ -337,33 +296,23 @@ class OCRGCNBase(nn.Module):
             Outlier scores of shape :math:`N` with gradients.
         """
 
-        # ############# modified by amer ##############
         if train:
             with torch.no_grad():
                 self.c = torch.mean(emb, 0)
                 self.c[(abs(self.c) < self.eps) & (self.c < 0)] = -self.eps
                 self.c[(abs(self.c) < self.eps) & (self.c > 0)] = self.eps
 
-        # ##########################################
-
         dist = torch.sum(torch.pow(emb - self.c, 2), 1)
         score = dist - self.r ** 2
         loss = self.r ** 2 + 1 / self.beta * torch.mean(torch.relu(score))
 
 
-        ############# modified by amer ##############
         if train:
             with torch.no_grad():
                 self.r = torch.quantile(torch.sqrt(dist), 1 - self.beta)
 
         if visualize:
             self.visualize(emb, label, train, fig_title)
-            ### debug #####
-            # print("Center of the hypersphere is", self.c)
             print("Radious of the hypersphere is", self.r)
-            # print("Current Mean Embedding is (current center of data)", torch.mean(emb, 0))
-            # print("Score", score)
-            # print("Distance:", dist)
-            ################
         del dist
         return loss, score

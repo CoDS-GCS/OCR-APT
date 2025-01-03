@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import argparse
 from resource import *
 import datetime
@@ -22,16 +21,13 @@ parser.add_argument('--min-node-representation', type=int, default=5)
 parser.add_argument('--filter-node-type', action="store_true", default=False)
 parser.add_argument('--rdfs', action="store_true", default=False)
 parser.add_argument('--graph-nx', action="store_true", default=False)
-# parser.add_argument('--graph-optc', action="store_true", default=False)
-# parser.add_argument('--graph-nodlink', action="store_true", default=False)
 parser.add_argument('--adjust-uuid', action="store_true", default=False)
-# parser.add_argument('--encode-attributes', action="store_true", default=False)
 from torch_geometric.seed import seed_everything
 
 args = parser.parse_args()
 print(args)
 assert args.dataset in ['tc3', 'optc', 'nodlink']
-assert args.host in ['cadets', 'trace', 'theia', 'fivedirections','SysClient0051','SysClient0501','SysClient0201','SimulatedUbuntu','SimulatedW10','SimulatedWS12']
+assert args.host in ['cadets', 'trace', 'theia','SysClient0051','SysClient0501','SysClient0201','SimulatedUbuntu','SimulatedW10','SimulatedWS12']
 def ensure_dir(file_path):
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
@@ -117,7 +113,6 @@ def convert_to_RDF(file_path,isTrain,remove_node_types_lst,testing_allNodes_df=N
     print("Number of unique nodes ", len(allNodes_df["node"].unique()))
     if args.dataset == "optc":
         date_format = "%Y-%m-%d %H:%M:%S"
-        # graph_df["timestamp"] = graph_df["timestamp"].apply(lambda x:x[:19])
         timestamp_lst = graph_df["timestamp"].apply(lambda x: datetime.datetime.strptime(x[:19], date_format)).tolist()
         start_date = min(timestamp_lst)
         end_date = max(graph_df["timestamp"])
@@ -161,17 +156,14 @@ def convert_to_RDF(file_path,isTrain,remove_node_types_lst,testing_allNodes_df=N
     elif args.dataset in ["optc","nodlink"]:
         file_path_csv = file_path.replace(".txt", "_node_attrs.csv")
         node_attrs_df = pd.read_csv(file_path_csv)
-        ############# fix_node_uuid ################
         if args.adjust_uuid:
             node_attrs_df["node"] = node_attrs_df["node"] + "-" + node_attrs_df["node_type"].str.lower()
-        #############################################
         for id, row in node_attrs_df.iterrows():
             triples.append([prefix + "node/" + str(row['node']), prefix + "node-attribute", '"' + str(row['node_attr']) + '"'])
             if args.rdfs:
                 turtle.append(["node:" + str(row['node']), "graph:node-attribute", '"' + str(row['node_attr']) + '"'])
         del node_attrs_df
 
-    # types_df.loc[len(types_df.index)] = ["entity" , prefix + "is_Train", "Literal"]
     node_types = allNodes_df["type"].unique().tolist()
     print("Number of node types: ",len(node_types))
     print(node_types)
@@ -188,8 +180,6 @@ def convert_to_RDF(file_path,isTrain,remove_node_types_lst,testing_allNodes_df=N
         del Is_malicious_df
 
     for uuid in allNodes_df["node"].unique().tolist():
-
-        ############# fix_node_uuid ################
         if args.adjust_uuid:
             base_uuid = "-".join(uuid.split("-")[0:-1])
             if base_uuid in Is_malicious_lst:
@@ -201,7 +191,6 @@ def convert_to_RDF(file_path,isTrain,remove_node_types_lst,testing_allNodes_df=N
                     turtle.append(["node:" + str(uuid), "graph:is_malicious", '"True"'])
                 else:
                     turtle.append(["node:" + str(uuid), "graph:is_malicious", '"False"'])
-            #############################################
         else:
             if uuid in Is_malicious_lst:
                 triples.append([prefix + "node/" + str(uuid), prefix + "is_malicious", "True"])
@@ -271,7 +260,6 @@ def get_all_nodes_df(graph_df):
     return allNodes_df
 
 def fix_node_uuid(graph_df):
-    # graph_df["source-id"] = graph_df[['source-id', 'source-type']].agg('-'.join, axis=1)
     graph_df["source-id"] = graph_df["source-id"] + "-" + graph_df["source-type"].str.lower()
     graph_df["destination-id"] = graph_df["destination-id"] + "-" + graph_df["destination-type"].str.lower()
     return graph_df
@@ -335,8 +323,6 @@ def explore_graph_stats(graph_df):
     print(f"Average degree: {mean(degree_sequence):.6f}")
     print("----------------------------------------------")
     del graph_nx
-    # degree_histogram = nx.degree_histogram(graph_nx)
-    # print(degree_histogram)
     return
 
 if __name__ == '__main__':
@@ -349,13 +335,9 @@ if __name__ == '__main__':
         train_path = args.root_path + "provenance_graphs/" + args.source_graph + "_benign_train.json"
         if args.min_node_representation:
             ############ To be implemented here
-            # remove_node_types_lst = get_remove_nodeType_lst(train_path, test_path)
             print("To be implemented, filter node type with very few node representation")
         triples_df_train, rdf_df_train, rdfs_df_train, train_graph_df = convert_to_RDF(
             train_path, True, remove_node_types_lst)
-        ##### Filter testing nodes from training set #####
-
-        ########## To be fixed here ##########
 
         test_paths = args.root_path + "provenance_graphs/" + args.source_graph + "*_test.json"
         first_graph = True
@@ -385,8 +367,6 @@ if __name__ == '__main__':
         triples_df_test, rdf_df_test, rdfs_df_test, test_graph_df = convert_to_RDF(test_path,False,
                                                                                                           remove_node_types_lst)
         testing_allNodes_df = get_all_nodes_df(test_graph_df)
-        # all_testing_nodeUUID_lst = test_allNodes_df["node"].unique().tolist()
-        # del test_allNodes_df
 
         triples_df_train, rdf_df_train, rdfs_df_train, train_graph_df = convert_to_RDF(train_path,True,
             remove_node_types_lst,testing_allNodes_df)
@@ -396,7 +376,6 @@ if __name__ == '__main__':
     print("Number of testing triples", len(triples_df_test))
 
     # concat train & test
-    # types_df = pd.concat([types_df, types_df_test]).drop_duplicates()
     triples_df = pd.concat([triples_df_train, triples_df_test])
     rdf_df = pd.concat([rdf_df_train, rdf_df_test])
     if args.rdfs:

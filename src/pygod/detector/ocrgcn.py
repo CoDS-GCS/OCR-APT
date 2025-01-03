@@ -13,8 +13,7 @@ torch.use_deterministic_algorithms(True)
 import numpy as np
 class OCRGCN(OCRAPT_DeepDetector):
     """
-    One-Class Graph Neural Networks for Anomaly Detection in
-    Attributed Networks
+    cite: OCR-APT: Reconstructing APT Stories through Subgraph Anomaly Detection and LLMs
 
     OCRGCN is an anomaly detector that measures the
     distance of anomaly to the centroid, in a similar fashion to the
@@ -25,6 +24,8 @@ class OCRGCN(OCRAPT_DeepDetector):
     ----------
     hid_dim :  int, optional
         Hidden dimension of model. Default: ``64``.
+    num_relations: int
+        Number of relations.
     num_layers : int, optional
         Total number of layers in model. Default: ``2``.
     dropout : float, optional
@@ -114,7 +115,6 @@ class OCRGCN(OCRAPT_DeepDetector):
                  save_emb=False,
                  compile_model=False,
                  visualize=False,
-                 # edge_weight=None,
                  **kwargs):
         super(OCRGCN, self).__init__(hid_dim=hid_dim,
                                      num_relations=num_relations,
@@ -133,7 +133,6 @@ class OCRGCN(OCRAPT_DeepDetector):
                                     save_emb=save_emb,
                                     compile_model=compile_model,
                                     visualize=visualize,
-                                    # edge_weight=edge_weight,
                                     **kwargs)
 
         self.beta = beta
@@ -141,7 +140,6 @@ class OCRGCN(OCRAPT_DeepDetector):
         self.eps = eps
         self.num_relations = num_relations
         self.visualize = visualize
-        # self.edge_weight = edge_weight
 
     def process_graph(self, data):
         pass
@@ -187,7 +185,6 @@ class OCRGCN(OCRAPT_DeepDetector):
         edge_type = data.edge_attr.to(self.device)
 
         emb = self.model(x, edge_index, edge_type)
-        ########## modified by amer ###############
         loss, score = self.model.loss_func(emb[data.active_mask, :][:batch_size], train=train, visualize=visualize,
                                            label=label, fig_title=fig_title)
         del emb, edge_type, edge_index, x

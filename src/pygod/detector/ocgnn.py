@@ -181,7 +181,6 @@ class OCGNN(OCRAPT_DeepDetector):
         edge_index = data.edge_index.to(self.device)
 
         emb = self.model(x, edge_index)
-        ##### modified by Amer ######
         loss, score = self.model.loss_func(emb[data.active_mask, :][:batch_size], train=train, visualize=visualize,
                                            label=label, fig_title=fig_title)
 

@@ -42,12 +42,6 @@ def get_llm_prompts():
     Focus on external IP addresses, suspicious or executable files, malicious processes, and exploitable processes. \n
     Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
     """,
-    # "retrieve_ioc_multiStage_comp": """
-    # Extract a list of external IP addresses, suspicious or executable files, malicious processes, and exploitable processes referenced in the provided reports. \n
-    # Extract the three highest-priority IoCs from each provided reports. \n
-    # Focus specifically on IoCs related to the stage: {STAGE}. \n
-    # Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
-    # """,
     "summarize_comp_report_iocs":"""
     Based on the provided reports and the extracted IoCs list: [ {IOC_LIST} ]. \n
     Summarize all provided reports into a comprehensive attack report. \n

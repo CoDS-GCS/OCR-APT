@@ -2,39 +2,18 @@ from copy import deepcopy
 import argparse
 import shutil
 import pandas as pd
-from tqdm import tqdm
 import datetime
 import torch
-from torch_geometric.nn import RGCNConv, RGATConv
-import torch.nn.functional as F
-from torch.nn import ModuleList, Linear, ParameterDict, Parameter
-from torch_geometric.utils import to_undirected
 from torch_geometric.data import Data
-from torch_geometric.loader import GraphSAINTRandomWalkSampler
 from torch_geometric.utils.hetero import group_hetero_graph
-from torch_geometric.nn import MessagePassing
 from torch_geometric.seed import seed_everything
 from statistics import mean
-from sklearn.preprocessing import StandardScaler
-from torch_geometric.utils import index_sort
-import sys
 import os
 import psutil
-from pathlib import Path
-import glob
 import time
-from pygod.utils import load_data
 from pygod.detector import OCGNN, DOMINANT , AnomalyDAE, CoLA , CONAD, GAE, GUIDE, OCRGCN
 from pygod.metric import eval_roc_auc , eval_average_precision, eval_precision_at_k, eval_recall_at_k, eval_f1
-from sklearn.decomposition import PCA , TruncatedSVD
-from sklearn import metrics
 import numpy as np
-import random
-import statistics
-from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import cross_val_score
-import traceback
-import sys
 
 from dataset_pyg_custom import PygNodePropPredDataset_custom
 from evaluate_hsh import Evaluator
@@ -42,67 +21,48 @@ from resource import *
 from logger import Logger
 import faulthandler
 torch.use_deterministic_algorithms(True)
-import pickle
 faulthandler.enable()
 
 pd.set_option('display.max_columns', 50)
 
 parser = argparse.ArgumentParser(description='OCR-APT')
-parser.add_argument('--device', type=int, default=0)
+parser.add_argument('--dataset', type=str,required=True)
+parser.add_argument('--host', type=str,required=True)
+parser.add_argument('--exp-name', type=str,required=True)
+parser.add_argument('--root-path', type=str,required=True)
+parser.add_argument('--load-model', type=str, default=None)
+parser.add_argument('--save-model', type=str, default=None)
+parser.add_argument('--detector', type=str, default="OCRGCN")
+parser.add_argument('--multiple-models', action="store_true", default=False)
+parser.add_argument('--dynamic-contamination', action="store_true", default=False)
+parser.add_argument('--runs', type=int, default=3)
 parser.add_argument('--num-layers', type=int, default=3)
 parser.add_argument('--input-layer', type=int, default=64)
-parser.add_argument('--hidden-channels', type=int, default=64)
+parser.add_argument('--hidden-channels', type=int, default=32)
 parser.add_argument('--adjust-hidden-channels', action="store_true", default=False)
 parser.add_argument('--n-classes', type=int, default=2)
 parser.add_argument('--dropout', type=float, default=0)
 parser.add_argument('--beta', type=float, default=0.5)
 parser.add_argument('--warmup', type=int, default=2)
 parser.add_argument('--visualize-training', action="store_true", default=False)
-parser.add_argument('--lr', type=float, default=0.0001)
+parser.add_argument('--lr', type=float, default=0.005)
 parser.add_argument('--epochs', type=int, default=100)
 parser.add_argument('--contamination', type=float, default=0.001)
-parser.add_argument('--runs', type=int, default=3)
 parser.add_argument('--batch-size', type=int, default=0)
 parser.add_argument('--batch-size-percentage', type=float, default=None)
-parser.add_argument('--walk-length', type=int, default=2)
-parser.add_argument('--num-steps', type=int, default=30)
 parser.add_argument('--flexable-rate', type=float, default=0.001)
 parser.add_argument('--max-contamination', type=float, default=0.05)
 parser.add_argument('--top-k', type=int, default=1000)
 parser.add_argument('--random-features', action="store_true", default=False)
-parser.add_argument('--dataset', type=str,required=True)
-parser.add_argument('--host', type=str,required=True)
-parser.add_argument('--exp-name', type=str,required=True)
-parser.add_argument('--root-path', type=str,required=True)
-parser.add_argument('--load-model', type=str, default=None)
-parser.add_argument('--consider-related-nodes', action="store_true", default=False)
-parser.add_argument('--store-embedding', action="store_true", default=False)
-parser.add_argument('--save-model', type=str, default=None)
 parser.add_argument('--save-emb', action="store_true", default=False)
-parser.add_argument('--backbone', type=str, default=None)
-parser.add_argument('--detector', type=str, default="OCGNN")
-parser.add_argument('--multiple-models', action="store_true", default=False)
-parser.add_argument('--ensemble-models', action="store_true", default=False)
-parser.add_argument('--features-per-node-type', action="store_true", default=False)
-parser.add_argument('--dynamic-contamination', action="store_true", default=False)
-parser.add_argument('--dynamic-contamination-val', action="store_true", default=False)
-parser.add_argument('--feature-reduction-PCA', action="store_true", default=False)
-parser.add_argument('--feature-reduction-TruncatedSVD', action="store_true", default=False)
-parser.add_argument('--reduction-target-node', action="store_true", default=False)
-parser.add_argument('--standard-scaler', action="store_true", default=False)
-parser.add_argument('--feature-reduction-NoSelection', action="store_true", default=False)
-parser.add_argument('--mask-edge-types', action="store_true", default=False)
-# parser.add_argument('--consider-direction', action="store_true", default=False)
-parser.add_argument('--edge-weight', action="store_true", default=False)
 parser.add_argument('--debug-one-subject', action="store_true", default=False)
 parser.add_argument('--debug-subjects', type=int, default=-1)
-parser.add_argument('--correlate-subgraphs', action="store_true", default=False)
 
 
 init_ru_maxrss = getrusage(RUSAGE_SELF).ru_maxrss
 args = parser.parse_args()
 assert args.dataset in ['tc3', 'optc', 'nodlink']
-assert args.host in ['cadets', 'trace', 'theia', 'fivedirections','SysClient0051','SysClient0501','SysClient0201','SimulatedUbuntu','SimulatedW10','SimulatedWS12']
+assert args.host in ['cadets', 'trace', 'theia','SysClient0051','SysClient0501','SysClient0201','SimulatedUbuntu','SimulatedW10','SimulatedWS12']
 dataset_numofClasses = str(args.n_classes)
 
 root_path = args.root_path
@@ -130,13 +90,12 @@ def ensure_dir(file_path):
         os.makedirs(directory)
 
 def delete_folder(dir_path):
-    ###################################Delete Folder if exist #############################
+    ##### Delete Folder if exist
     try:
         shutil.rmtree(dir_path)
         print("Folder Deleted")
     except OSError as e:
         print("Error Deleting : %s : %s" % (dir_path, e.strerror))
-    ####################
     return
 
 def man_confusion_matrix(y_true, y_pred):
@@ -146,6 +105,7 @@ def man_confusion_matrix(y_true, y_pred):
     TN = len([i for i in range(len(y_pred)) if (y_true[i] == y_pred[i] == 0)])
     FN = len([i for i in range(len(y_pred)) if (y_pred[i] == 0 and y_true[i] != y_pred[i])])
     return (TP, FP, TN, FN)
+
 def print_predict_evaluation_metrics(tp,tn,fp,fn,message=None):
     if (tp + fp) == 0:
         precision = None
@@ -200,9 +160,6 @@ def pyGod(run,seed):
             detector.fit(homo_data,fig_title=fig_title)
         else:
             detector.fit(homo_data)
-        ########## Debug ########
-        print("The model Threshold is:", detector.threshold_)
-        #########################
         train_time = time.time() - start_train_time
         print("Training time: ", train_time , "seconds.")
         print_memory_usage()
@@ -217,11 +174,6 @@ def pyGod(run,seed):
             else:
                 y_pred_train = detector.predict(homo_data, return_pred=True)
             homo_data.active_mask = deepcopy(homo_data.val_mask)
-            # if args.batch_size_percentage:
-            #     batch_size = int(len(homo_data.y[homo_data.active_mask]) * args.batch_size_percentage)
-            # else:
-            #     batch_size = args.batch_size
-            # print("Used validate Batch size is: ", batch_size)
             if args.visualize_training:
                 y_pred_val = detector.predict(homo_data, return_pred=True,label=homo_data.y[homo_data.active_mask],fig_title=str(fig_title+"_evaluate_validating_set.png"))
             else:
@@ -250,16 +202,12 @@ def pyGod(run,seed):
             'labels': [0, 1]
         })['cm']
         print('validating set CM:\n', valid_cm)
-        # tn, tp, fp, fn = 0, 0, 0, 0
-        # tn = valid_cm[0][0]
-        # tp = valid_cm[1][1]
-        # fp = valid_cm[0][1]
-        # fn = valid_cm[1][0]
         tp, fp, tn, fn = man_confusion_matrix(y_true=y_true[homo_data.val_mask], y_pred=y_pred_val)
         print_predict_evaluation_metrics(tp, tn, fp, fn)
         result = train_acc, valid_acc
         print("Validation time: ", time.time() - validate_time, "seconds.")
         return result
+
     def data_statistics_contamination(homo_data):
         n_train = sum(homo_data.train_mask).item()
         n_val = sum(homo_data.val_mask).item()
@@ -270,14 +218,8 @@ def pyGod(run,seed):
         print("Total Validating Samples:", n_val)
         print("Number of malicious samples:", sum(homo_data.y[homo_data.val_mask]).item())
         print("Number of benign samples:", n_val - sum(homo_data.y[homo_data.val_mask]).item())
-        if args.dynamic_contamination_val:
-            contamination = round(sum(homo_data.y[homo_data.val_mask]).item() / (n_val),3)
-            print("The contamination based on validating data is:", contamination)
-        else:
-            contamination = round(sum(homo_data.y[homo_data.val_mask]).item() / (n_train + n_val),3)
-            print("The contamination based on training and validating data is:", contamination)
-            contamination = (contamination * 2) + args.flexable_rate
-            print("Use the second formula, (con * 2) + flex_rate")
+        contamination = round(sum(homo_data.y[homo_data.val_mask]).item() / (n_val),3)
+        print("The contamination based on validating data is:", contamination)
         print("The contamination has set to be between",args.flexable_rate," and",args.max_contamination)
         contamination = max(contamination,args.flexable_rate)
         contamination = min(contamination, args.max_contamination)
@@ -285,6 +227,7 @@ def pyGod(run,seed):
         print("Number of malicious samples:", sum(homo_data.y[homo_data.test_mask]).item())
         print("Number of benign samples:", n_test - sum(homo_data.y[homo_data.test_mask]).item())
         return contamination
+
     def split_per_node_type(homo_data,target_node):
         homo_data_per_type = deepcopy(homo_data)
         homo_data_per_type.train_mask = torch.zeros((node_type.size(0)), dtype=torch.bool)
@@ -298,98 +241,11 @@ def pyGod(run,seed):
         contamination = data_statistics_contamination(homo_data_per_type)
         if not args.dynamic_contamination:
             contamination = args.contamination
-        if args.features_per_node_type:
-            # get different features set for each node type
-            target_node_feat = load_features(target_node)
-            non_empty_mask = target_node_feat.abs().sum(dim=0).bool()
-            target_node_feat = target_node_feat[:, non_empty_mask]
-            feat = torch.zeros((node_type.size(0)), target_node_feat.size(1))
-            if args.random_features:
-                print("randomly initialize other node types")
-                torch.nn.init.xavier_uniform_(feat)
-                feat[local2global[target_node]] = target_node_feat
-            else:
-                for subject_node in subject_nodes:
-                    if args.feature_reduction_PCA or args.feature_reduction_TruncatedSVD:
-                        if subject_node != target_node or args.feature_reduction_NoSelection:
-                            if args.feature_reduction_PCA:
-                                reduction_alg = PCA(n_components=target_node_feat.size(1))
-                            elif args.feature_reduction_TruncatedSVD and args.reduction_target_node:
-                                reduction_alg = TruncatedSVD(n_components=target_node_feat.size(1),algorithm='randomized')
-                            elif args.feature_reduction_TruncatedSVD:
-                                reduction_alg = TruncatedSVD(n_components=target_node_feat.size(1))
-                            temp_feat = load_features(subject_node)
-                            if target_node_feat.size(1) > min(temp_feat.shape):
-                                print("Number of samples of the node",subject_node ," is:",min(temp_feat.shape) ,",which is less the reduction feature size")
-                                print("Use feature selection based on target node feature size instead of feature reduction")
-                                temp_feat = temp_feat[:, non_empty_mask]
-                                # print("Use the full feature for the target node",target_node)
-                                # print("Target node features size is", homo_data.x.size(1))
-                                # return homo_data_per_type, contamination
-                            else:
-                                temp_feat = reduction_alg.fit_transform(temp_feat)
-                                temp_feat = torch.from_numpy(temp_feat).float()
-                            feat[local2global[subject_node]] = temp_feat
-                        else:
-                            if args.reduction_target_node:
-                                if args.feature_reduction_PCA:
-                                    reduction_alg = PCA(n_components=target_node_feat.size(1))
-                                elif args.feature_reduction_TruncatedSVD:
-                                    reduction_alg = TruncatedSVD(n_components=target_node_feat.size(1),algorithm='randomized')
-                                target_node_feat = reduction_alg.fit_transform(target_node_feat)
-                                target_node_feat = torch.from_numpy(target_node_feat).float()
-                            feat[local2global[target_node]] = target_node_feat
-                            print("Target node features size is",target_node_feat.size(1))
-                    else:
-                        print("load other node types features and fill na with 0")
-                        temp_feat = load_features(subject_node)
-                        temp_feat = temp_feat[:, non_empty_mask]
-                        feat[local2global[subject_node]] = temp_feat
-            print("The `model` for ", target_node, "nodes has initial features of size:", temp_feat.size(1))
-            homo_data_per_type.x = feat
-        if args.mask_edge_types:
-            # Replace edges not related to the target node with "other" edge for each (subject,object) pair
-            ignore_dic = {}
-            for subject, predicate, object in key_lst:
-                if target_node != subject and target_node != object and 'inv_' not in predicate:
-                    if (subject,'OTHER',object) in ignore_dic.keys():
-                        ignore_dic[(subject,'OTHER',object)].append(key2int[(subject, predicate, object)])
-                        # ignore_dic[(subject, 'OTHER', object)].append(key2int[(object, "inv_" + predicate, subject)])
-                        ignore_dic[(object,'inv_OTHER',subject)].append(key2int[(object, "inv_" + predicate, subject)])
-                    else:
-                        ignore_dic[(subject, 'OTHER', object)] = [key2int[(subject, predicate, object)]]
-                        # ignore_dic[(subject, 'OTHER', object)].append(key2int[(object, "inv_" + predicate, subject)])
-                        ignore_dic[(object,'inv_OTHER',subject)] = [key2int[(object, "inv_" + predicate, subject)]]
-
-            new_id = len(homo_data_per_type.edge_attr.unique())
-            for key,ignore_lst in ignore_dic.items():
-                edge_ignore_mask = np.isin(homo_data_per_type.edge_attr, ignore_lst)
-                homo_data_per_type.edge_attr[edge_ignore_mask] = new_id
-                del edge_ignore_mask
-                new_id +=1
-            # Resort the edge_type and edge_index tensors
-            old_edge_attr = deepcopy(homo_data_per_type.edge_attr)
-            old_edge_index = deepcopy(homo_data_per_type.edge_index)
-            new_edge_indices, new_edge_types = [], []
-            for new_edge_id, old_edge_id in enumerate(old_edge_attr.unique()):
-                # print("Convert edge id:",old_edge_id.item(),"to:", new_edge_id)
-                current_mask = [old_edge_attr==old_edge_id.item()]
-                new_edge_indices.append(torch.stack((old_edge_index[0][current_mask],old_edge_index[1][current_mask])))
-                new_edge_types.append(torch.full(old_edge_attr[current_mask].size(),new_edge_id))
-                del current_mask
-            homo_data_per_type.edge_index = torch.cat(new_edge_indices, dim=-1)
-            homo_data_per_type.edge_attr = torch.cat(new_edge_types, dim=0)
-            print("Number of edges:",homo_data_per_type.edge_index.size(1))
-            del old_edge_attr, old_edge_index, new_edge_indices, new_edge_types
         return homo_data_per_type , contamination
+
     def load_features(node_type):
         feat_path = root_path + args.exp_name + "/features/" + node_type + "/node-features.pt"
         feat = torch.load(feat_path)
-        if args.standard_scaler:
-            # apply StandardScaler
-            scalar = StandardScaler()
-            feat = scalar.fit_transform(feat)
-            feat = torch.from_numpy(feat).float()
         return feat
 
     def inintailize_model(contamination,num_relations,batch_size):
@@ -404,12 +260,7 @@ def pyGod(run,seed):
                                             epoch=args.epochs, batch_size=batch_size, dropout=args.dropout,
                                             lr=args.lr, contamination=contamination,save_emb = args.save_emb,beta=args.beta,warmup=args.warmup,visualize=args.visualize_training)
         elif args.detector == "OCRGCN":
-            if args.backbone == "RGATConv":
-                detector = OCRGCN(num_relations=num_relations, hid_dim=hidden_channels,num_layers=args.num_layers,
-                                  epoch=args.epochs, batch_size=batch_size, dropout=args.dropout,
-                                  lr=args.lr, contamination=contamination,backbone=RGATConv,save_emb = args.save_emb,beta=args.beta,warmup=args.warmup,visualize=args.visualize_training)
-            else:
-                detector = OCRGCN(num_relations=num_relations,hid_dim=hidden_channels,num_layers=args.num_layers,
+            detector = OCRGCN(num_relations=num_relations,hid_dim=hidden_channels,num_layers=args.num_layers,
                                             epoch=args.epochs, batch_size=batch_size, dropout=args.dropout,
                                             lr=args.lr, contamination=contamination,save_emb = args.save_emb,beta=args.beta,warmup=args.warmup,visualize=args.visualize_training)
         elif args.detector == "DOMINANT":
@@ -440,6 +291,7 @@ def pyGod(run,seed):
             print("Not Defined detector:", args.detector)
             return None
         return detector
+
     def log_raised_alarms(homo_data, y_pred, score, y_prob,target_node=None,alerts_2hop=None,run=0):
         model_prediction_df = pd.DataFrame({'node_id': range(homo_data.num_nodes)})[homo_data.test_mask.tolist()]
         model_prediction_df['Label'] = homo_data.y.view(-1)[homo_data.test_mask.tolist()]
@@ -538,33 +390,25 @@ def pyGod(run,seed):
         fscore = (2 * prec * rec) / (prec + rec) if prec + rec > 0 else 0
 
         return acc, prec, rec, fscore, FPR, TPR
+
     def helper(MP, all_pids, GP, edges, mapping_dict):
-        print("Initial number of ground truth labels", len(GP))
-        print("Initial number of identified anomolous nodes", len(MP))
         TP = MP.intersection(GP)
         FP = MP - GP
         FN = GP - MP
         TN = all_pids - (GP | MP)
 
-        print("Debugging, initial results without two hops anomolous nodes")
-        acc, prec, rec, fscore, FPR, TPR = calculate_metrics(len(TP), len(FP), len(FN), len(TN))
-        print(f"TP: {len(TP)}, FP: {len(FP)}, FN: {len(FN)}, TN: {len(TN)}")
-        print(f"Precision: {round(prec, 3)}, Recall: {round(rec, 3)}, Fscore: {round(fscore, 3)}")
-
         two_hop_gp = Get_Adjacent(GP, mapping_dict, edges, 2)
-        print("Number of nodes that connect to ground truth malicious nodes with 2-hops", len(two_hop_gp))
         two_hop_tp = Get_Adjacent(TP, mapping_dict, edges, 2)
-        print("Number of nodes that connect to true anomalous identified nodes with 2-hops", len(two_hop_tp))
 
         FPL = FP - two_hop_gp
         TPL = TP.union(FN.intersection(two_hop_tp))
         FN = FN - two_hop_tp
+        TN = TN.union((FP - FPL))
 
         TP, FP, FN, TN = len(TPL), len(FPL), len(FN), len(TN)
 
         acc,prec, rec, fscore, FPR, TPR = calculate_metrics(TP, FP, FN, TN)
         print("\n*******************************************")
-        print("Debugging, results with two hops identified anomalous nodes (FLASH and THREATRACE Logic)")
         print(f"TP: {TP}, FP: {FP}, FN: {FN}, TN: {TN}")
         print(f"Precision: {round(prec, 3)}, Recall: {round(rec, 3)}, Fscore: {round(fscore, 3)}")
         anomaly_2hop_results_df = pd.DataFrame({'accuracy':[acc],'precision': [prec], 'recall': [rec],'f_measure': [fscore],
@@ -572,10 +416,9 @@ def pyGod(run,seed):
         del two_hop_gp, two_hop_tp
         alerts_2hop = TPL.union(FPL)
         return alerts_2hop , anomaly_2hop_results_df
+
     def predict_with_related_nodes(homo_data,y_true,y_pred):
         start_compute_related_nodes = time.time()
-        print("Result with post-processing evaluation (Considering 2-hops related nodes of anomalous nodes as true anomalies)")
-        # confirm mapping, get only testing set , fix getAdjacency function
         mapping_nodes_df = pd.DataFrame()
         for subject_node in subject_nodes:
             file_path = root_path + args.exp_name + "/mapping/" + subject_node + "_entidx2name.csv"
@@ -589,14 +432,7 @@ def pyGod(run,seed):
         identified_uuid = {mapping_dict[idx] for idx in testing_idx if y_pred[idx] == 1}
         gt_nodes_uuid = {mapping_dict[idx] for idx in testing_idx if y_true[idx] == 1}
         alerts_2hop , anomaly_2hop_results_df = helper(identified_uuid, testing_uuid, gt_nodes_uuid, homo_data.edge_index.tolist(),mapping_dict)
-
-        # if args.save_model:
-        #     out_path = root_path + "results/" + args.exp_name + "/" + args.save_model.replace(".model","") + "_raised_related_alarms.pt"
-        # else:
-        #     out_path = root_path + "results/" + args.exp_name + "/" + args.load_model.replace(".model","") + "_raised_related_alarms.pt"
-        # checkpoint(alerts_2hop,out_path)
         del gt_nodes_uuid, identified_uuid, testing_uuid, testing_idx
-        # print_predict_evaluation_metrics(tp, tn, fp, fn, "Consider 2-hops of related nodes")
         print("Computed related nodes in ", time.time() - start_compute_related_nodes)
         return alerts_2hop , anomaly_2hop_results_df
 
@@ -663,72 +499,17 @@ def pyGod(run,seed):
                 message = "Profiling results of node type:" + subject_node
                 print_predict_evaluation_metrics(tp, tn, fp, fn, message)
                 del y_true_per_type, y_pred_per_type, test_cm_per_type
-        # if args.consider_related_nodes:
-        #     predict_with_related_nodes(y_true_testing,y_pred)
         detection_time = time.time() - predict_time
         print("Detection time: ", detection_time , "seconds.")
         return anomaly_results_df, y_pred, score, y_prob,detection_time, test_acc
 
-    def test_ensemble_models(y_true_testing,y_pred_lst,score_lst,threshold_lst):
-        # Ensemble models with majority voting
-        all_y_pred = torch.stack(y_pred_lst)
-        mode_y_pred = torch.mode(all_y_pred, dim=0)
-        test_cm = evaluator_cm.eval({
-            'y_true': y_true_testing,
-            'y_pred': mode_y_pred[0],
-            'labels': [0, 1]
-        })['cm']
-        print('Test_cm:\n', test_cm)
-        # tn = test_cm[0][0]
-        # tp = test_cm[1][1]
-        # fp = test_cm[0][1]
-        # fn = test_cm[1][0]
-        tp, fp, tn, fn = man_confusion_matrix(y_true=y_true_testing, y_pred=mode_y_pred[0])
-        print_predict_evaluation_metrics(tp, tn, fp, fn, "Ensemble models with majority voting")
-
-        # Ensemle models with score averaging
-        all_score = torch.stack(score_lst)
-        avg_score = torch.mean(all_score, dim=0)
-        avg_threshold = mean(threshold_lst)
-        avg_y_pred = (avg_score > avg_threshold).long()
-        test_cm = evaluator_cm.eval({
-            'y_true': y_true_testing,
-            'y_pred': avg_y_pred.view(y_true_testing.shape),
-            'labels': [0, 1]
-        })['cm']
-        print('Test_cm:\n', test_cm)
-        tp, fp, tn, fn = man_confusion_matrix(y_true=y_true_testing, y_pred=avg_y_pred.view(y_true_testing.shape))
-        anomaly_results_df = print_predict_evaluation_metrics(tp, tn, fp, fn, "Ensemble models with score averaging")
-        anomaly_results_df['auc'] = eval_roc_auc(y_true_testing, avg_score)
-        print('AUC Score:', anomaly_results_df['auc'].item())
-        max_score = torch.max(all_score, dim=0)
-        max_threshold = max(threshold_lst)
-        max_y_pred = (max_score[0] > max_threshold).long()
-        test_cm = evaluator_cm.eval({
-            'y_true': y_true_testing,
-            'y_pred': max_y_pred.view(y_true_testing.shape),
-            'labels': [0, 1]
-        })['cm']
-        print('Test_cm:\n', test_cm)
-        tp, fp, tn, fn = man_confusion_matrix(y_true=y_true_testing, y_pred=max_y_pred.view(y_true_testing.shape))
-        anomaly_results_df = print_predict_evaluation_metrics(tp, tn, fp, fn, "Ensemble models with maximum score")
-        anomaly_results_df['auc'] = eval_roc_auc(y_true_testing, max_score[0])
-        print('AUC Score:', anomaly_results_df['auc'].item())
-        # Ensemle models with maximum score
-        return
-
 
     to_remove_pedicates = []
     to_remove_subject_object = []
-    # to_keep_edge_idx_map = []
-    # GA_Index = 0
     print(args)
-    # gsaint_start_t = datetime.datetime.now()
-    ###################################Delete Folder if exist #############################
-    #### DEBUG try without deleting #########
+    ######## Delete Folder if exist
     dir_path = root_path + args.exp_name
     delete_folder(dir_path)
-    ##########################################
 
     dataset = PygNodePropPredDataset_custom(name=args.exp_name, root=root_path,
                                             numofClasses=dataset_numofClasses)
@@ -783,13 +564,6 @@ def pyGod(run,seed):
     ######### remove empty edges ##############
     num_relations = len(edge_type.unique())
     print("Number of relations", num_relations)
-    # edge_weight = None
-    # if args.edge_weight:
-    #     weight_lst = ([1] * int(num_relations/2)) + ([0.2] * int(num_relations/2))
-    #     edge_weight = torch.tensor(weight_lst, dtype=torch.float)
-    # mask = (edge_index[0][:] != -1)
-    # edge_index = torch.stack((edge_index[0][mask], edge_index[1][mask]))
-    # edge_type = edge_type[mask]
 
     homo_data = Data(edge_index=edge_index, edge_attr=edge_type,
                      node_type=node_type, local_node_idx=local_node_idx,
@@ -820,34 +594,26 @@ def pyGod(run,seed):
     contamination = data_statistics_contamination(homo_data)
     if not args.dynamic_contamination:
         contamination = args.contamination
-    #######################intialize features ###############################
-    if not args.features_per_node_type:
-        if args.random_features:
-            input_layer = args.input_layer
-            feat = torch.zeros((node_type.size(0)), input_layer)
-            torch.nn.init.xavier_uniform_(feat)
-        else:
-            temp_feat = load_features(subject_nodes[0])
-            input_layer = temp_feat.size(1)
-            feat = torch.zeros((node_type.size(0)), input_layer)
-            del temp_feat
-            for subject_node in subject_nodes:
-                temp_feat = load_features(subject_node)
-                feat[local2global[subject_node]] = temp_feat
-        print("Size of input layers:", input_layer)
-        homo_data.x = deepcopy(feat)
-
-    print("Data:", homo_data)
-    print(key2int)
-    # num_nodes_dict = {}
-    # for key, N in data.num_nodes_dict.items():
-    #     num_nodes_dict[key2int[key]] = N
+    ############ intialize features
+    if args.random_features:
+        input_layer = args.input_layer
+        feat = torch.zeros((node_type.size(0)), input_layer)
+        torch.nn.init.xavier_uniform_(feat)
+    else:
+        temp_feat = load_features(subject_nodes[0])
+        input_layer = temp_feat.size(1)
+        feat = torch.zeros((node_type.size(0)), input_layer)
+        del temp_feat
+        for subject_node in subject_nodes:
+            temp_feat = load_features(subject_node)
+            feat[local2global[subject_node]] = temp_feat
+    print("Size of input layers:", input_layer)
+    homo_data.x = deepcopy(feat)
 
     # Start Training the PyGOD model
     y_true = deepcopy(homo_data.y)
     homo_data.y = homo_data.y.bool()
     debug_subjects = args.debug_subjects
-    # del homo_data.y
     global final_y_pred_testing,final_y_prob_testing,final_score_testing
     global final_emb
     final_emb = pd.DataFrame()
@@ -855,15 +621,12 @@ def pyGod(run,seed):
     final_y_prob_testing = torch.zeros((y_true.size(0)))
     final_score_testing = torch.zeros((y_true.size(0)))
     if args.save_emb and run == 0:
-        # final_emb = pd.DataFrame({'node_id': range(homo_data.num_nodes)})
         mapping_nodes_df = pd.DataFrame()
         for subject_node in subject_nodes:
             file_path = root_path + args.exp_name + "/mapping/" + subject_node + "_entidx2name.csv"
             mapping_nodes_df_tmp = pd.read_csv(file_path, header=None, skiprows=1, names=["node_id", "node_uuid"])
             mapping_nodes_df_tmp["node_id"] = local2global[subject_node][mapping_nodes_df_tmp["node_id"]]
-            # mapping_nodes_df_tmp["node_type"] = subject_node
             mapping_nodes_df = pd.concat([mapping_nodes_df, mapping_nodes_df_tmp])
-        # final_emb = pd.merge(final_emb, mapping_nodes_df, on="node_id")
     if args.load_model:
         out_path = root_path + "figures/" + args.exp_name + "/" + args.load_model.replace(".model", "")+"/"
         ensure_dir(out_path)
@@ -878,8 +641,6 @@ def pyGod(run,seed):
                 detector = torch.load(model_path)
                 homo_data_per_type,contamination = split_per_node_type(homo_data,subject_node)
                 anomaly_results_df_subject, y_pred, score, y_prob,detection_time_subject,test_acc = test(detector, homo_data_per_type,analyze_per_type=False,fig_title=str(out_path+"_"+subject_node))
-                # if run == 0:
-                #     log_raised_alarms(homo_data_per_type, y_pred, score, y_prob, subject_node)
                 log_raised_alarms(homo_data_per_type, y_pred, score, y_prob, target_node=subject_node,run=run)
                 all_tp += anomaly_results_df_subject['tp'].item()
                 all_tn += anomaly_results_df_subject['tn'].item()
@@ -906,35 +667,13 @@ def pyGod(run,seed):
             print("Average recall at :",args.top_k,"is", mean(recall_at_k))
             print("Total detection time is:",detection_time_run)
         else:
-            if args.ensemble_models:
-                y_pred_lst,score_lst,threshold_lst = [],[],[]
-                detection_time_run = 0
-                anomaly_results_df = pd.DataFrame()
-                for run in range(args.runs):
-                    model_path = root_path + "models/" +args.exp_name + "/" + args.load_model
-                    detector = torch.load(model_path)
-                    anomaly_results_df_run, y_pred, score, y_prob,detection_time_run_tmp, test_acc = test(detector, homo_data)
-                    y_pred_lst.append(y_pred)
-                    score_lst.append(score)
-                    threshold_lst.append(detector.threshold_)
-                    anomaly_results_df = pd.concat([anomaly_results_df, anomaly_results_df_run])
-                    detection_time_run += detection_time_run_tmp
-                # get average & majority voting
-                y_true_testing = y_true[homo_data.test_mask]
-                test_ensemble_models(y_true_testing, y_pred_lst, score_lst, threshold_lst)
-                print("Average performance across all runs:")
-                print(anomaly_results_df.describe())
-                print("Total Detection time is:",detection_time_run)
-            else:
-                model_path = root_path + "models/"+args.exp_name+ "/" + args.load_model
-                detector = torch.load(model_path)
-                anomaly_results_df_run, y_pred, score, y_prob,detection_time_run, test_acc = test(detector, homo_data,fig_title=out_path)
-                # if run == 0:
-                #     log_raised_alarms(homo_data, y_pred, score, y_prob)
-                log_raised_alarms(homo_data, y_pred, score, y_prob, run=run)
-                print("Detection time is:", detection_time_run)
-                if args.save_emb and run == 0:
-                    map_save_embedding(homo_data, detector.emb, mapping_nodes_df)
+            model_path = root_path + "models/"+args.exp_name+ "/" + args.load_model
+            detector = torch.load(model_path)
+            anomaly_results_df_run, y_pred, score, y_prob,detection_time_run, test_acc = test(detector, homo_data,fig_title=out_path)
+            log_raised_alarms(homo_data, y_pred, score, y_prob, run=run)
+            print("Detection time is:", detection_time_run)
+            if args.save_emb and run == 0:
+                map_save_embedding(homo_data, detector.emb, mapping_nodes_df)
     else:
         out_path = root_path + "figures/" + args.exp_name + "/"+ args.save_model.replace(".model","") +"/"
         ensure_dir(out_path)
@@ -946,9 +685,6 @@ def pyGod(run,seed):
                 seed_everything(seed)
                 print("****************************************")
                 print("Training a model for node type:",subject_node)
-                # if subject_nodes_mal[subject_node].item() == 0 and all_tp ==0:
-                #     print("Couldn't detect any true alarms")
-                #     break
                 homo_data_per_type,contamination = split_per_node_type(homo_data, subject_node)
                 num_relations = len(homo_data_per_type.edge_attr.unique())
                 if args.batch_size_percentage:
@@ -959,13 +695,9 @@ def pyGod(run,seed):
                 print("Number of relations is:", num_relations)
                 detector = inintailize_model(contamination,num_relations,batch_size)
                 detector,train_time = train(detector, homo_data_per_type,fig_title=str(out_path+"_"+subject_node))
-                # Seed after training to minimize affects on testing
-                # seed_everything(seed)
                 result = validate(detector, homo_data_per_type,fig_title=str(out_path+"_"+subject_node))
                 anomaly_results_df_subject, y_pred, score, y_prob,detection_time_subject, test_acc = test(detector, homo_data_per_type,analyze_per_type=False,fig_title=str(out_path+"_"+subject_node))
                 result = result + (test_acc,)
-                # if run == 0:
-                #     log_raised_alarms(homo_data_per_type, y_pred, score, y_prob,subject_node)
                 log_raised_alarms(homo_data_per_type, y_pred, score, y_prob, target_node=subject_node,run=run)
                 print(f' Train accuracy: {result[0]:.3f}')
                 print(f' Valid accuracy: {result[1]:.3f}')
@@ -1005,7 +737,6 @@ def pyGod(run,seed):
             print("****************************************")
             anomaly_results_df_run = print_predict_evaluation_metrics(all_tp, all_tn, all_fp, all_fn,"Overall Evaluation results")
             anomaly_results_df_run['avg_auc'] = mean(auc_dic.values())
-            # anomaly_results_df_run['auc_dic'] = auc_dic
             print("Average AUC:", mean(auc_dic.values()))
             print("Average avg_precision:", mean(avg_precision))
             print("Average precision at :", args.top_k, "is", mean(precision_at_k))
@@ -1019,18 +750,10 @@ def pyGod(run,seed):
             print("Used Batch size is: ", batch_size)
             detector = inintailize_model(contamination,num_relations,batch_size)
             detector,train_time_run = train(detector, homo_data,fig_title=out_path)
-            # Seed after training to minimize affects on testing
-            # seed_everything(seed)
             result = validate(detector, homo_data,fig_title=out_path)
             anomaly_results_df_run, y_pred, score, y_prob, detection_time_run, test_acc = test(detector, homo_data,fig_title=out_path)
             result = result + (test_acc,)
-            # if run == 0:
-            #     log_raised_alarms(homo_data, y_pred, score, y_prob)
             log_raised_alarms(homo_data, y_pred, score, y_prob,run=run)
-            # if args.ensemble_models:
-            #     y_pred_lst.append(y_pred)
-            #     score_lst.append(score)
-            #     threshold_lst.append(detector.threshold_)
             logger.add_result(run, result)
             logger.print_statistics(run)
             if run == 0:
@@ -1051,30 +774,13 @@ def pyGod(run,seed):
     print('Overall Testing set CM:\n', test_cm)
     tp, fp, tn, fn = man_confusion_matrix(y_true=y_true[homo_data.test_mask], y_pred=final_y_pred_testing[homo_data.test_mask])
     print_predict_evaluation_metrics(tp, tn, fp, fn)
-    if args.consider_related_nodes:
-        alerts_2hop,anomaly_2hop_results_df = predict_with_related_nodes(homo_data,y_true,final_y_pred_testing)
-        anomaly_results_df_run[['accuracy_2hop','precision_2hop','recall_2hop','f_measure_2hop','tp_2hop','tn_2hop','fp_2hop','fn_2hop','tpr_2hop','fpr_2hop']] = anomaly_2hop_results_df[['accuracy','precision','recall','f_measure','tp','tn','fp','fn','tpr','fpr']]
+    alerts_2hop,anomaly_2hop_results_df = predict_with_related_nodes(homo_data,y_true,final_y_pred_testing)
+    anomaly_results_df_run[['accuracy_2hop','precision_2hop','recall_2hop','f_measure_2hop','tp_2hop','tn_2hop','fp_2hop','fn_2hop','tpr_2hop','fpr_2hop']] = anomaly_2hop_results_df[['accuracy','precision','recall','f_measure','tp','tn','fp','fn','tpr','fpr']]
     final_auc = eval_roc_auc(y_true[homo_data.test_mask], final_score_testing[homo_data.test_mask])
     print("Final AUC is:",final_auc)
-    # if run == 0:
-    #     if args.consider_related_nodes:
-    #         log_raised_alarms(homo_data, final_y_pred_testing[homo_data.test_mask],
-    #                           final_score_testing[homo_data.test_mask], final_y_prob_testing[homo_data.test_mask],
-    #                           target_node=None,alerts_2hop=alerts_2hop)
-    #     else:
-    #         log_raised_alarms(homo_data, final_y_pred_testing[homo_data.test_mask],
-    #                           final_score_testing[homo_data.test_mask], final_y_prob_testing[homo_data.test_mask],
-    #                           target_node=None)
-    if args.consider_related_nodes:
-        log_raised_alarms(homo_data, final_y_pred_testing[homo_data.test_mask],
-                          final_score_testing[homo_data.test_mask], final_y_prob_testing[homo_data.test_mask],
-                          target_node=None, alerts_2hop=alerts_2hop,run=run)
-    else:
-        log_raised_alarms(homo_data, final_y_pred_testing[homo_data.test_mask],
-                          final_score_testing[homo_data.test_mask], final_y_prob_testing[homo_data.test_mask],
-                          target_node=None,run=run)
-    if args.correlate_subgraphs:
-        pass
+    log_raised_alarms(homo_data, final_y_pred_testing[homo_data.test_mask],
+                      final_score_testing[homo_data.test_mask], final_y_prob_testing[homo_data.test_mask],
+                      target_node=None, alerts_2hop=alerts_2hop,run=run)
     if args.save_emb and run == 0:
         print("Number of prepared node embeddings",len(final_emb))
         del final_emb["node_id"]
@@ -1083,22 +789,7 @@ def pyGod(run,seed):
         print("Saving the embedding to", emb_path)
         final_emb.to_csv(emb_path, index=None)
 
-    # get average & majority voting
-    # if args.ensemble_models:
-    #     y_true_testing = y_true[homo_data.test_mask]
-        # test_ensemble_models(y_true_testing,y_pred_lst,score_lst,threshold_lst)
-    # print("\n************************************************************")
-    # if not args.multiple_models:
-    #     logger.print_statistics()
-    # print("\n************************************************************")
-    # print("Average performance across all runs:")
-    # print(anomaly_results_df.describe())
-    # log_raised_alarms(homo_data, y_pred, score, y_prob)
-    # print("Average detection time", mean(detection_time_lst))
-    # print("Average training time",mean(train_time_lst))
-
-    ###################################Delete Folder if exist #############################
-    ### DEBUG: try without deleting #############
+    ####### Delete Folder if exist
     dir_path = args.root_path + args.exp_name
     delete_folder(dir_path)
 
@@ -1126,7 +817,6 @@ if __name__ == '__main__':
         if not args.load_model:
             print("Total training time for this run ", anomaly_results_df_run["train_time_run"])
         seed = np.random.randint(0, 1000)
-    # if args.save_model:
     print("\n************************************************************")
     if not args.multiple_models and not args.load_model:
         logger.print_statistics()

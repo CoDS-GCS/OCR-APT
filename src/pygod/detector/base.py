@@ -456,9 +456,7 @@ class DeepDetector(Detector, ABC):
                                          weight_decay=self.weight_decay)
 
         self.model.train()
-        ####################### modified by amer ######################3
         self.decision_score_ = torch.zeros(data.x.shape[0])
-        #########################
         retrain = True
         while retrain:
             retrain = False
@@ -467,7 +465,6 @@ class DeepDetector(Detector, ABC):
                 epoch_loss = 0
                 if self.gan:
                     self.epoch_loss_g = 0
-                # pbar = tqdm(total=data.x.shape[0])
                 for sampled_data in loader:
                     batch_size = sampled_data.batch_size
                     node_idx = sampled_data.n_id
@@ -482,22 +479,15 @@ class DeepDetector(Detector, ABC):
                         else:
                             self.emb[node_idx[:batch_size]] = \
                                 self.model.emb[:batch_size].cpu()
-                    ###### modified by amer ##########
                     self.decision_score_[node_idx[sampled_data.active_mask][:batch_size]] = score
-                    ######################
                     optimizer.zero_grad()
                     loss.backward()
                     optimizer.step()
                     # pbar.set_description(f'Epoch:{epoch:02d}'f' (Loss={loss:.6f})')
                     print(f'Epoch:{epoch:02d}'f' (Loss={loss:.6f})')
-                ###### modified by amer ##########
                 loss_value = epoch_loss / data.x[data.active_mask, :].shape[0]
                 if self.gan:
                     loss_value = (self.epoch_loss_g / data.x[data.active_mask, :].shape[0], loss_value)
-                # loss_value = epoch_loss / data.x.shape[0]
-                # if self.gan:
-                    # loss_value = (self.epoch_loss_g / data.x.shape[0], loss_value)
-                #################################
                 logger(epoch=epoch,
                        loss=loss_value,
                        score=self.decision_score_,
@@ -505,19 +495,15 @@ class DeepDetector(Detector, ABC):
                        time=time.time() - start_time,
                        verbose=self.verbose,
                        train=True)
-        ###### modified by amer ##########
         self.decision_score_ = self.decision_score_[data.active_mask]
-        #################################
         self._process_decision_score()
         return self
 
     def decision_function(self, data, label=None,batch_size=None):
 
         self.process_graph(data)
-        ########### modified by Amer #############
         if batch_size:
             self.batch_size = batch_size
-        ###############
         loader = NeighborLoader(data,
                                     self.num_neigh,
                                     batch_size=self.batch_size)
@@ -548,23 +534,13 @@ class DeepDetector(Detector, ABC):
 
             outlier_score[node_idx[sampled_data.active_mask][:batch_size]] = score
 
-        ###### modified by Amer ######
         logger(loss=loss.item() / data.x[data.active_mask, :].shape[0],
                score=outlier_score,
                target=label,
                time=time.time() - start_time,
                verbose=self.verbose,
                train=False)
-        ###################
-        # logger(loss=loss.item() / data.x.shape[0],
-        #        score=outlier_score,
-        #        target=label,
-        #        time=time.time() - start_time,
-        #        verbose=self.verbose,
-        #        train=False)
-        ###### modified by Amer ######
         outlier_score = outlier_score[data.active_mask]
-        ############################
         return outlier_score
 
     def predict(self,

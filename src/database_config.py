@@ -1,7 +1,5 @@
 import json
 
-
-
 def get_attack_time_range(dataset):
     if dataset  == 'cadets':
         attack_time_range = {"BSD1": ["2018-04-06 11:21", "2018-04-06 12:08"],
@@ -81,9 +79,6 @@ def order_x_features(host,edge_types):
     elif host =='SysClient0201':
         edge_types = ['COMMAND','DELETE','MODIFY','RENAME', 'WRITE','READ','CREATE', 'MESSAGE_OUTBOUND', 'MESSAGE_INBOUND','LOAD',
                     'REMOTE_CREATE','OPEN_INBOUND', 'OPEN','REMOVE', 'EDIT', 'ADD','START','TERMINATE','START_INBOUND','START_OUTBOUND']
-    # elif dataset in ['SysClient0051', 'SysClient0501', 'SysClient0201']:
-    #     edge_types = ['DELETE', 'MODIFY', 'CREATE', 'REMOTE_CREATE', 'COMMAND', 'MESSAGE_OUTBOUND', 'MESSAGE_INBOUND',
-    #                       'READ', 'WRITE', 'LOAD', 'RENAME', 'OPEN_INBOUND', 'OPEN', 'REMOVE', 'EDIT', 'ADD']
     elif host == 'SimulatedUbuntu':
         edge_types = ['execve', "rmdir", "chmod", "rename", "write", "writev", "read", "readv", "sendto", "send",
                       "recvfrom", "sendmsg", "recvmsg", "clone", "fork", "pipe", "fcntl"]
@@ -108,5 +103,5 @@ def rename_node_type(dataset):
     elif dataset == "optc":
         map_node_type = {"PROCESS":"process","FILE":"file","FLOW":"flow","SHELL":"shell","THREAD":"thread","MODULE":"module","REGISTRY":"registry","TASK":"task"}
     elif dataset == "nodlink":
-        map_node_type = {"PROCESS":"process","net":"flow","FILE":"file"}
+        map_node_type = {"PROCESS":"process","NET":"flow","FILE":"file"}
     return map_node_type

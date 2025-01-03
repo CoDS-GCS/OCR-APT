@@ -3,21 +3,14 @@ import gzip
 from datetime import datetime
 import os
 import shutil
-import itertools
-import random
-from sklearn.metrics import precision_recall_fscore_support as score
-import gc
 import argparse
 from torch_geometric.seed import seed_everything
 from statistics import mean
-import pytz
 import time
-from copy import deepcopy
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, normalize, MaxAbsScaler, RobustScaler  # to standardize the features
+from sklearn.preprocessing import MinMaxScaler, normalize  # to standardize the features
 
 from database_config import order_x_features
-# from sklearn.decomposition import PCA  # to apply PCA
-# import seaborn as sns  # to plot the heat maps
+
 pd.set_option('display.max_columns', 100)
 
 parser = argparse.ArgumentParser(description='DARPA to OGB')
@@ -37,8 +30,6 @@ parser.add_argument('--get-time-series', action="store_true", default=False)
 parser.add_argument('--parse-time-series', action="store_true", default=False)
 parser.add_argument('--normalize-features', action="store_true", default=False)
 parser.add_argument('--fill-with-mean', action="store_true", default=False)
-# parser.add_argument('--graph-optc', action="store_true", default=False)
-# parser.add_argument('--graph-nodlink', action="store_true", default=False)
 parser.add_argument('--training-valid', action="store_true", default=False)
 from sklearn.model_selection import train_test_split
 import torch
@@ -48,7 +39,7 @@ torch.use_deterministic_algorithms(True)
 args = parser.parse_args()
 print(args)
 assert args.dataset in ['tc3', 'optc', 'nodlink']
-assert args.host in ['cadets', 'trace', 'theia', 'fivedirections','SysClient0051','SysClient0501','SysClient0201','SimulatedUbuntu','SimulatedW10','SimulatedWS12']
+assert args.host in ['cadets', 'trace', 'theia', 'SysClient0051','SysClient0501','SysClient0201','SimulatedUbuntu','SimulatedW10','SimulatedWS12']
 def compress_gz(f_path):
     f_in = open(f_path, 'rb')
     f_out = gzip.open(f_path + ".gz", 'wb')
@@ -67,7 +58,7 @@ def delete_multiple_element(list_object, indices):
             list_object.pop(idx)
 
 def delete_folder(dir_path):
-    ###################################Delete Folder if exist #############################
+    ######### Delete Folder if exist
     try:
         shutil.rmtree(dir_path)
         print("Folder Deleted")
@@ -85,6 +76,14 @@ def delete_file(file_path):
         print("Error Deleting : %s : %s" % (file_path, e.strerror))
     ####################
     return
+
+
+if args.dataset == "optc":
+    prefix = "https://DARPA_OPTC.graph/" + args.host + "/"
+elif args.dataset == "nodlink":
+    prefix = "https://NODLINK.graph/" + args.host + "/"
+else:
+    prefix = "https://DARPA_TC3.graph/" + args.host +"/"
 
 def splitbyStratifiedNodeTypes(g_tsv_df,this_type_node_idx,entites_dic,labels_rel_df,label_node):
     print("Get sample for", label_node, "node")
@@ -216,13 +215,6 @@ def feature_engineering(graph_df,edge_types):
     x_list_df = x_list_df.loc[:, (x_list_df != 0).any(axis=0)]
     del x_list
 
-    # if args.get_idle_time:
-    #     x_list_df.insert(0, 'min_idle_time', x_list_df.pop("min_idle_time"))
-    #     x_list_df.insert(0, 'max_idle_time', x_list_df.pop("max_idle_time"))
-    #     x_list_df.insert(0, 'avg_idle_time', x_list_df.pop("avg_idle_time"))
-    #     x_list_df["avg_idle_time"] = x_list_df.pop("avg_idle_time")
-    #     x_list_df["max_idle_time"] = x_list_df.pop("max_idle_time")
-    #     x_list_df["min_idle_time"] = x_list_df.pop("min_idle_time")
     if args.timestamps_in_minutes:
         if args.get_idle_time:
             timeFeatures_to_scale = ["max_idle_time", "min_idle_time", "avg_idle_time"]
@@ -241,7 +233,6 @@ def feature_engineering(graph_df,edge_types):
         timestamp_features = [column for column in x_list_df.columns if (column not in sorted_edge_types) and (column !="node_uuid")]
 
         normalized_x_list_df = x_list_df[["node_uuid"]]
-
         # Normalize L2 Unit vector normalization (L2) for actions , and MinMax
         normalized_data = normalize(x_list_df[sorted_edge_types], norm='l2', axis=1)
         columns_to_normalize_row = ["norm_" + edge for edge in sorted_edge_types]
@@ -249,11 +240,8 @@ def feature_engineering(graph_df,edge_types):
         if args.get_idle_time:
             scaler = MinMaxScaler()
             normalized_x_list_df[timestamp_features] = pd.DataFrame(scaler.fit_transform(x_list_df[timestamp_features]), columns=timestamp_features)
-        # scaler = MinMaxScaler(feature_range=(0, 1))
-        # normalized_x_list_df[sorted_edge_types] = pd.DataFrame(scaler.fit_transform(x_list_df[sorted_edge_types]),columns=sorted_edge_types)
         del x_list_df
         x_list_df = normalized_x_list_df
-
 
     print("Total Number of features:", len(x_list_df.columns) - 1)
     print("Extracted features:", x_list_df.columns)
@@ -261,35 +249,6 @@ def feature_engineering(graph_df,edge_types):
     return x_list_df
 
 
-
-###################### Zip Folder to OGB Format
-# zip -r mag_ComputerProgramming_papers_venue_QM3.zip mag_ComputerProgramming_papers_venue_QM3/ -i '*.gz'
-def define_rel_types(g_tsv_df):
-    g_tsv_df["p"]
-def parse_milliseconds(millis_df):
-    millis_df = millis_df.fillna(0)
-    millis_df = millis_df.astype(int)
-    milliseconds = (millis_df%1000).astype(int)
-    seconds=((millis_df/1000)%60).astype(int)
-    minutes=((millis_df/(1000*60))%60).astype(int)
-    hours=((millis_df/(1000*60*60))%24).astype(int)
-    days=((millis_df/(1000*60*60*24))).astype(int)
-    return days,hours, minutes, seconds, milliseconds
-def parse_seconds(sec_df):
-    sec_df = sec_df.fillna(0)
-    sec_df = sec_df.astype(int)
-    seconds = (sec_df%60).astype(int)
-    minutes=((sec_df/60)%60).astype(int)
-    hours=((sec_df/(60*60))%24).astype(int)
-    days=((sec_df/(60*60*24))).astype(int)
-    return days,hours, minutes, seconds
-
-if args.dataset == "optc":
-    prefix = "https://DARPA_OPTC.graph/" + args.host + "/"
-elif args.dataset == "nodlink":
-    prefix = "https://NODLINK.graph/" + args.host + "/"
-else:
-    prefix = "https://DARPA_TC3.graph/" + args.host +"/"
 
 if __name__ == '__main__':
     seed = 360
@@ -308,10 +267,8 @@ if __name__ == '__main__':
                 "valid":5 , "test":6 }
     target_rel = prefix + "is_malicious"
     node_type_rel = prefix + "node-type"
-    # label_node = "entity"
     dic_results = {}
     Literals2Nodes = True
-    # nclasses = 3
     output_root_path = args.root_path
     g_tsv_df = pd.read_csv(output_root_path + rdf_graph_name + ".tsv",encoding_errors='ignore',sep="\t")
     graph_df_path = output_root_path + args.source_graph + "_graph_df.csv"
@@ -322,12 +279,6 @@ if __name__ == '__main__':
         g_tsv_df = g_tsv_df.rename(columns={0: "s", 1: "p", 2: "o"})
         label_nodes = g_tsv_df[g_tsv_df["p"]==prefix + "node-type"]["o"].unique()
         edge_types = g_tsv_df[g_tsv_df["o"]==prefix + "edge-type"]["s"].unique()
-        ######################## Remove Litreal Edges####################
-        # Literal_edges_lst = []
-        # g_tsv_df = g_tsv_df[~g_tsv_df["p"].isin(Literal_edges_lst)]
-        # print("len of g_tsv_df after remove literal edges types ", len(g_tsv_df))
-        #g_tsv_df = g_tsv_df.drop_duplicates()
-        #print("len of g_tsv_df after drop_duplicates  ", len(g_tsv_df))
         g_tsv_df = g_tsv_df.dropna()
         print("len of g_tsv_df after dropna  ", len(g_tsv_df))
     except:
@@ -335,20 +286,6 @@ if __name__ == '__main__':
     dic_results[dataset_name] = {}
     dic_results[dataset_name]["usecase"] = dataset_name
     dic_results[dataset_name]["TriplesCount"] = len(g_tsv_df)
-    ################ filter out is_malicious ################
-    # g_tsv_df=g_tsv_df[~g_tsv_df['p'].isin([prefix + "is_malicious"])]
-    ######################## delete non target papers #####################
-    # relations_lst = g_tsv_df["p"].unique().astype("str").tolist()
-    # print("relations_lst:", relations_lst)
-
-    # #################### Remove Split and Target Rel ############
-    # if split_rel in relations_lst:
-    #     relations_lst.remove(split_rel)
-    # if target_rel in relations_lst:
-    #     relations_lst.remove(target_rel)
-    # if node_type_rel in relations_lst:
-    #     relations_lst.remove(node_type_rel)
-    ################################write relations index ########################
     relations_lst = edge_types.astype("str").tolist()
     print("relations_lst=", relations_lst)
     relations_df = pd.DataFrame(relations_lst, columns=["rel name"])
@@ -362,22 +299,11 @@ if __name__ == '__main__':
         os.makedirs(map_folder)
     relations_df.to_csv(map_folder + "/relidx2relname.csv", index=None)
     compress_gz(map_folder + "/relidx2relname.csv")
-    ############################### create target label index ########################
-    # label_idx_df = pd.DataFrame(g_tsv_df[g_tsv_df["p"] == target_rel]["o"].apply(lambda x: str(x).strip()).unique().tolist(),columns=["label name"])
-    # try:
-    #     label_idx_df["label name"] = label_idx_df["label name"].astype("int64")
-    #     label_idx_df = label_idx_df.sort_values(by=["label name"]).reset_index(drop=True)
-    # except:
-    #     label_idx_df["label name"] = label_idx_df["label name"].astype("str")
-    #     label_idx_df = label_idx_df.sort_values(by=["label name"]).reset_index(drop=True)
-    #
-    # label_idx_df["label idx"] = label_idx_df.index
-    # label_idx_df = label_idx_df[["label idx", "label name"]]
     label_idx_df = pd.DataFrame({"label idx": [0, 1], "label name": [False, True]})
     dic_results[dataset_name]["ClassesCount"] = len(label_idx_df)
     label_idx_df.to_csv(map_folder + "/labelidx2labelname.csv", index=None)
     compress_gz(map_folder + "/labelidx2labelname.csv")
-    ###########################################prepare relations mapping#################################
+    ######## prepare relations mapping
     relations_entites_map = {}
 
     entites_dic = {}
@@ -388,7 +314,7 @@ if __name__ == '__main__':
     node_types_df = g_tsv_df[g_tsv_df["p"] == prefix + "node-type"][["s", "o"]].drop_duplicates()
     node_types_df = node_types_df.rename(columns={"s":"node","o": "type"})
 
-    ############################### Make sure all rec papers have target ###########
+    ######### Make sure all rec papers have target
     target_subjects_lst = g_tsv_df[g_tsv_df["p"] == target_rel]["s"].apply(
         lambda x: str(x).split("/")[-1]).unique().tolist()
     print("len of target_subjects_lst=", len(target_subjects_lst))
@@ -400,7 +326,7 @@ if __name__ == '__main__':
         print("len of entites_dic["+label_node+"]=", len(entites_dic[label_node]))
         total_num_nodes += len(entites_dic[label_node])
     print("Total encoded nodes is: ", total_num_nodes)
-    ############################ write entites index #################################
+    ############# write entites index
     for key in list(entites_dic.keys()):
         entites_dic[key] = pd.DataFrame(list(entites_dic[key]), columns=['ent name']).astype(
             'str').sort_values(by="ent name").reset_index(drop=True)
@@ -416,7 +342,7 @@ if __name__ == '__main__':
             os.makedirs(map_folder)
         entites_dic[key].to_csv(map_folder + "/" + key + "_entidx2name.csv", index=None)
         compress_gz(map_folder + "/" + key + "_entidx2name.csv")
-    #################### write nodes statistics ######################
+    ########### write nodes statistics
     lst_node_has_feat = [
         list(
             filter(lambda entity: str(entity).endswith("_dic") == False, list(entites_dic.keys())))]
@@ -462,15 +388,14 @@ if __name__ == '__main__':
         index=None)
     compress_gz(output_root_path + dataset_name + "/raw/num-node-dict.csv")
 
-    ############################### create label relation index  ######################
+    ############# create label relation index
     label_idx_df["label idx"] = label_idx_df["label idx"].astype("int64")
     label_idx_df["label name"] = label_idx_df["label name"].apply(lambda x: str(x).split("/")[-1])
     label_idx_dic = pd.Series(label_idx_df["label idx"].values, index=label_idx_df["label name"]).to_dict()
-    ############ drop multiple targets per subject keep first #######################
+    ######### drop multiple targets per subject keep first
     labels_rel_df = g_tsv_df[g_tsv_df["p"] == target_rel].reset_index(drop=True)
     labels_rel_df = labels_rel_df.sort_values(['s', 'o'], ascending=[True, True])
     labels_rel_df = labels_rel_df.drop_duplicates(subset=["s"], keep='first')
-    ###############################################################################
     cnt_train, cnt_valid, cnt_test = 0, 0, 0
     print("entites_dic=", list(entites_dic.keys()))
     lst_node_has_split = []
@@ -501,7 +426,7 @@ if __name__ == '__main__':
         compress_gz(map_folder + "/node-label.csv")
 
 
-    ###########################################split parts (train/test/validate)#########################
+    ################# split parts (train/test/validate)
         labels_rel_df_temp = labels_rel_df_temp[["s_idx","o_idx"]]
         print("Split by", split_rel)
         train_df, valid_df, test_df = splitbyStratifiedNodeTypes(g_tsv_df,this_type_node_idx,entites_dic,labels_rel_df_temp,label_node)
@@ -523,7 +448,7 @@ if __name__ == '__main__':
             test_df.to_csv(map_folder + "/test.csv", index=None, header=None)
             compress_gz(map_folder + "/test.csv")
             lst_node_has_split.append(label_node)
-    ###################### create nodetype-has-split.csv#####################
+    ###################### create nodetype-has-split.csv
     lst_has_split = []
     for node_type in label_nodes_names:
         if node_type in lst_node_has_split:
@@ -541,7 +466,7 @@ if __name__ == '__main__':
     print("Total Validating Samples:", cnt_valid)
     print("Total Testing Samples:", cnt_test)
 
-    ###################### write entites relations for nodes only (non literals) #########################
+    ################# write entites relations for nodes only (non literals)
     # The updated way of mapping edges
     lst_relations_df = graph_df[['source-type', 'edge-type', 'destination-type']].drop_duplicates().reset_index(drop=True)
 
@@ -564,15 +489,14 @@ if __name__ == '__main__':
                 os.makedirs(map_folder)
             rel_out.to_csv(map_folder + "/edge.csv", index=None, header=None)
             compress_gz(map_folder + "/edge.csv")
-            ########## write relations num #################
+            ##### write relations num
             f = open(map_folder + "/num-edge-list.csv", "w")
             f.write(str(len(this_relations_dic)))
             f.close()
             compress_gz(map_folder + "/num-edge-list.csv")
-            ##################### write relations idx #######################
+            ########## write relations idx
             rel_idx = relations_df[relations_df["rel name"] == rel.split("/")[-1]]["rel idx"].values[0]
             rel_out.insert(2, 'rel_idx', rel_idx)
-            # rel_out["rel_idx"] = rel_idx
             rel_idx_df = rel_out["rel_idx"]
             rel_idx_df.to_csv(map_folder + "/edge_reltype.csv", header=None, index=None)
             compress_gz(map_folder + "/edge_reltype.csv")
@@ -584,7 +508,7 @@ if __name__ == '__main__':
     compress_gz(output_root_path + dataset_name + "/raw/triplet-type-list.csv")
     print("Total encoded edges is: ", total_num_edges)
 
-    ########################################### Prepare node features (edge type distribution) #########################
+    ################ Prepare node features (edge type distribution)
     features_time = time.time()
 
     x_list_df = feature_engineering(graph_df,edge_types)

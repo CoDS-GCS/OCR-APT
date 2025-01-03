@@ -167,9 +167,6 @@ class Evaluator:
 
 if __name__ == '__main__':
     ### rocauc case
-
-
-
     evaluator = Evaluator('ogbn-proteins')
     print(evaluator.expected_input_format)
     print(evaluator.expected_output_format)

@@ -86,7 +86,6 @@ class OCGNNBase(nn.Module):
                             dropout=dropout,
                             act=act,
                             **kwargs)
-        # self.reset_layer_parameters(self.gnn)
         self.r = 0
         self.c = torch.zeros(hid_dim)
 
@@ -115,23 +114,6 @@ class OCGNNBase(nn.Module):
 
         self.emb = self.gnn(x, edge_index)
         return self.emb
-    # def loss_func_val(self, emb, label=None, fig_title=None, visualize=False):
-    #     early_stop =False
-    #     label = label.reshape(-1)
-    #     emb_benign = emb[~label]
-    #     dist_benign = torch.sqrt(torch.sum(torch.pow(emb_benign - self.c, 2), 1))
-    #     avg_dist_benign = torch.mean(torch.relu(dist_benign))
-    #     emb_malicious = emb[label]
-    #     dist_malicious = torch.sqrt(torch.sum(torch.pow(emb_malicious - self.c, 2), 1))
-    #     avg_dist_malicious = torch.mean(torch.relu(dist_malicious))
-    #     valid_loss = avg_dist_malicious - avg_dist_benign
-    #     print("Validation loss:", valid_loss.item())
-    #     print("Average Benign Distance",avg_dist_benign.item()," with STD: ", torch.std(torch.relu(dist_benign)).item())
-    #     print("Average Malicious Distance", avg_dist_malicious.item(), " with STD: ", torch.std(torch.relu(dist_malicious)).item())
-    #     if visualize:
-    #         self.visualize(emb, label, fig_title=fig_title)
-    #     return early_stop
-
 
     def early_stop_f1_auc_max(self, validation_auc, validation_f1_score, validation_TNR):
         # set early stopping technique f1_score & AUC & TNR
@@ -140,7 +122,6 @@ class OCGNNBase(nn.Module):
             if validation_f1_score > self.max_validation_f1_score:
                 self.max_validation_f1_score = validation_f1_score
                 self.counter = 0
-            # elif validation_f1_score < self.f1_baseline:
             elif (validation_f1_score < self.f1_baseline) or (validation_f1_score < (self.max_validation_f1_score - self.max_delta)):
                 self.counter = 0
             elif validation_f1_score <= self.max_validation_f1_score:
@@ -154,7 +135,6 @@ class OCGNNBase(nn.Module):
                 if validation_auc > self.max_validation_auc:
                     self.max_validation_auc = validation_auc
                     self.counter = 0
-                # elif validation_auc <= 0.5:
                 elif (validation_auc <= 0.5) or (validation_auc < (self.max_validation_auc - self.max_delta)):
                     self.counter = 0
                 elif validation_auc <= self.max_validation_auc:
@@ -166,7 +146,6 @@ class OCGNNBase(nn.Module):
                 if validation_TNR > self.max_validation_TNR:
                     self.counter = 0
                     self.max_validation_TNR = validation_TNR
-                # elif validation_TNR <= 0.01:
                 elif (validation_TNR <= 0.01) or (validation_TNR < self.max_validation_TNR - self.max_delta):
                     self.counter = 0
                 elif validation_TNR <= self.max_validation_TNR:
@@ -175,45 +154,6 @@ class OCGNNBase(nn.Module):
                         return 1
         return 0
 
-    # def early_stop_f1_auc_max(self, validation_auc, validation_f1_score, validation_TNR):
-    #     # set early stopping technique f1_score & AUC & TNR
-    #     if self.malicious_percentage > 0.05:
-    #         # Optimize on F1-Score when relatively balanced data
-    #         if validation_f1_score > self.max_validation_f1_score:
-    #             self.max_validation_f1_score = validation_f1_score
-    #             self.counter = 0
-    #         # elif (validation_f1_score < self.f1_baseline) or (validation_f1_score < (self.max_validation_f1_score - self.max_delta)):
-    #         elif validation_f1_score < self.f1_baseline:
-    #             self.counter = 0
-    #         elif validation_f1_score <= self.max_validation_f1_score:
-    #             self.counter += 1
-    #             if self.counter >= self.patience:
-    #                 return 1
-    #     else:
-    #         # # set early stopping technique TPR & TNR
-    #         if validation_auc:
-    #             # Optimize on auc when imbalanced data
-    #             if validation_auc > self.max_validation_auc:
-    #                 self.max_validation_auc = validation_auc
-    #                 self.counter = 0
-    #             elif validation_auc <= 0.5:
-    #                 self.counter = 0
-    #             elif validation_auc <= self.max_validation_auc:
-    #                 self.counter += 1
-    #                 if self.counter >= self.patience:
-    #                     return 1
-    #         else:
-    #             # Optimize on TNR when no malicious samples
-    #             if validation_TNR > self.max_validation_TNR:
-    #                 self.counter = 0
-    #                 self.max_validation_TNR = validation_TNR
-    #             elif validation_TNR <= 0.01:
-    #                 self.counter = 0
-    #             elif validation_TNR <= self.max_validation_TNR:
-    #                 self.counter += 1
-    #                 if self.counter >= self.patience:
-    #                     return 1
-    #     return 0
     def man_confusion_matrix(self,y_true, y_pred):
         TP,FP,TN,FN = 0,0,0,0
         TP = len([i for i in range(len(y_pred)) if (y_true[i] == y_pred[i] == 1) ])
@@ -239,7 +179,6 @@ class OCGNNBase(nn.Module):
         validation_pred = validation_pred.reshape(len(validation_pred), 1)
         validation_f1_score = f1_score(y_true=label, y_pred=validation_pred, zero_division=0)
         print('Validation F1-score:', round(validation_f1_score.item(), 5))
-        # TN, FP, FN, TP = confusion_matrix(y_true= label.int(),y_pred= validation_pred,labels= [0, 1]).ravel()
         TP, FP, TN, FN = self.man_confusion_matrix(y_true=label.int(), y_pred=validation_pred)
         if (TP + FN) == 0:
             validation_TPR = None
@@ -257,15 +196,6 @@ class OCGNNBase(nn.Module):
             self.visualize(emb, label, fig_title=fig_title)
 
         self.early_stop = self.early_stop_f1_auc_max(validation_auc, validation_f1_score, validation_TNR)
-        # if early_stop == 1:
-        #     if validation_TPR is not None:
-        #         if validation_TPR <= self.TPR_baseline:
-        #             self.counter = 0
-        #             early_stop = 2
-        #     if validation_TNR is not None:
-        #         if validation_TNR <= self.TNR_baseline:
-        #             self.counter = 0
-        #             early_stop = 3
         self.first_epoch = False
         del validation_pred, validation_dist, validation_score
         return self.early_stop
@@ -283,8 +213,6 @@ class OCGNNBase(nn.Module):
         emb2D = transformTo2D.fit_transform(emb.detach().numpy())
         if train:
             self.c2D = transformTo2D.transform(self.c.reshape(1, -1)).reshape(-1)
-        # plt.xlim((self.c2D[0] - self.r) * 2, (self.c2D[0] + self.r) * 2)
-        # plt.ylim((self.c2D[1] - self.r) * 2, (self.c2D[1] + self.r) * 2)
         if torch.is_tensor(label):
             label = label.reshape(-1)
             benign_emb2D = emb2D[~label]
@@ -334,33 +262,22 @@ class OCGNNBase(nn.Module):
         score : torch.Tensor
             Outlier scores of shape :math:`N` with gradients.
         """
-
-        # ############# modified by amer ##############
         if train:
             with torch.no_grad():
                 self.c = torch.mean(emb, 0)
                 self.c[(abs(self.c) < self.eps) & (self.c < 0)] = -self.eps
                 self.c[(abs(self.c) < self.eps) & (self.c > 0)] = self.eps
-        # ##########################################
 
         dist = torch.sum(torch.pow(emb - self.c, 2), 1)
         score = dist - self.r ** 2
         loss = self.r ** 2 + 1 / self.beta * torch.mean(torch.relu(score))
 
-        ############# modified by amer ##############
         if train:
             with torch.no_grad():
                 self.r = torch.quantile(torch.sqrt(dist), 1 - self.beta)
 
         if visualize:
             self.visualize(emb, label, train, fig_title)
-            ### debug #####
-            # print("Center of the hypersphere is", self.c)
             print("Radious of the hypersphere is", self.r)
-            # print("Current Mean Embedding is (current center of data)", torch.mean(emb, 0))
-            # print("Score", score)
-            # print("Distance:", dist)
-            ################
-        #########################################
 
         return loss, score

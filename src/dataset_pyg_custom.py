@@ -10,7 +10,7 @@ from ogb.io.read_graph_pyg import read_graph_pyg, read_heterograph_pyg
 from ogb.io.read_graph_raw import read_node_label_hetero, read_nodesplitidx_split_hetero
 
 class PygNodePropPredDataset_custom(InMemoryDataset):
-    def __init__(self, name, root = '../dataset/streamspot/',numofClasses=349, transform=None, pre_transform=None, meta_dict = None, split_by='time'):
+    def __init__(self, name, root = '../dataset/',numofClasses=349, transform=None, pre_transform=None, meta_dict = None, split_by='time'):
         '''
             - name (str): name of the dataset
             - root (str): root directory to store the dataset folder
@@ -35,17 +35,6 @@ class PygNodePropPredDataset_custom(InMemoryDataset):
 
             self.original_root = self.datasets_path #root
             self.root = self.dir_name
-            # self.root = root
-            # self.root = self.dir_name
-            # self.root = osp.join(root, self.dir_name)
-            
-            # master = pd.read_csv(os.path.join(os.path.dirname(__file__), 'master.csv'), index_col = 0)
-            # if not self.name in master:
-            #     error_mssg = 'Invalid dataset name {}.\n'.format(self.name)
-            #     error_mssg += 'Available datasets are as follows:\n'
-            #     error_mssg += '\n'.join(master.keys())
-            #     raise ValueError(error_mssg)
-            # self.meta_info = master[self.name]
             
         else:
             self.dir_name = meta_dict['dir_path']
@@ -53,17 +42,6 @@ class PygNodePropPredDataset_custom(InMemoryDataset):
             self.root = meta_dict['dir_path']
             self.meta_info = meta_dict
 
-        # check version
-        # First check whether the dataset has been already downloaded or not.
-        # If so, check whether the dataset version is the newest or not.
-        # If the dataset is not the newest version, notify this to the user.
-
-        # if osp.isdir(self.root) and (not osp.exists(osp.join(self.root, 'RELEASE_v' + str(self.meta_info['version']) + '.txt'))):
-        #     print(self.name + ' has been updated.')
-        #     if input('Will you update the dataset now? (y/N)\n').lower() == 'y':
-        #         shutil.rmtree(self.root)
-        # if osp.exists(self.root):
-        #     shutil.rmtree(self.root)
 
         self.meta_info = {'url': self.dir_name + ".zip"}
         f = zipfile.ZipFile(self.dir_name + ".zip", 'r')
@@ -149,16 +127,13 @@ class PygNodePropPredDataset_custom(InMemoryDataset):
         if str(url).startswith("http")==False:
             path =url
             extract_zip(path, self.original_root)
-            # os.unlink(path) # delete  file
             if self.download_name.split("/")[-1]!=self.root.split("/")[-1]:
                 shutil.rmtree(self.root)
-            # shutil.move(osp.join(self.original_root, self.download_name), self.root)
         elif decide_download(url):
             path = download_url(url, self.original_root)
             extract_zip(path, self.original_root)
             os.unlink(path)
             shutil.rmtree(self.root)
-            # shutil.move(osp.join(self.original_root, self.download_name), self.root)
         else:
             print('Stop downloading.')
             shutil.rmtree(self.root)

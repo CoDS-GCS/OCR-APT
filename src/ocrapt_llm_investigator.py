@@ -1,8 +1,5 @@
 import pandas as pd
 from networkx.readwrite import json_graph
-from pygments.lexer import default
-from tenacity import retry_unless_exception_type
-
 pd.set_option('display.max_colwidth', None)
 from IPython.display import Markdown, display
 from rich.console import Console
@@ -17,23 +14,17 @@ from copy import deepcopy
 import numpy as np
 from llama_index.llms.openai import OpenAI
 from llama_index.core.memory import ChatMemoryBuffer
-from llama_index.core import SimpleDirectoryReader, get_response_synthesizer
-from llama_index.core import DocumentSummaryIndex
-from llama_index.core.node_parser import SentenceSplitter, SentenceWindowNodeParser, SemanticSplitterNodeParser
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-from llama_index.core.schema import Document, TextNode
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core import VectorStoreIndex
 from llama_index.core import StorageContext, load_index_from_storage
-from llama_index.core import SummaryIndex
 from llama_index.core.vector_stores import MetadataFilters, MetadataFilter
-from SPARQLWrapper import SPARQLWrapper , JSON, POST, BASIC
-from typing import Any, Callable, List
+from SPARQLWrapper import SPARQLWrapper , JSON
 from datetime import datetime, timedelta
+from database_config import rename_node_type
 import pytz
 my_tz = pytz.timezone('America/Nipigon')
 import nest_asyncio
 nest_asyncio.apply()
-from llama_index.core import Settings
-import networkx as nx
 import time
 from sparql_queries import get_investigation_queries
 from llm_prompt import get_llm_prompts
@@ -47,8 +38,8 @@ import ast
 import argparse
 import psutil
 from resource import *
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from openai import APITimeoutError
+
+
 def seed_everything(seed: int):
     r"""Sets the seed for generating random numbers in :pytorch:`PyTorch`,
     :obj:`numpy` and Python.
@@ -96,7 +87,7 @@ parser.add_argument('--runs', type=int, default=1)
 
 args = parser.parse_args()
 assert args.dataset in ['tc3', 'optc', 'nodlink']
-assert args.host in ['cadets', 'trace', 'theia', 'fivedirections','SysClient0051','SysClient0501','SysClient0201','SimulatedUbuntu','SimulatedW10','SimulatedWS12']
+assert args.host in ['cadets', 'trace', 'theia','SysClient0051','SysClient0501','SysClient0201','SimulatedUbuntu','SimulatedW10','SimulatedWS12']
 process = psutil.Process(os.getpid())
 
 if args.dataset == "optc":
@@ -123,7 +114,6 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 seed = 360
 MAX_IOC_CONTEXT_ATTEMPT = 3
 llm = OpenAI(model=args.llm_model, temperature=0, seed=seed,timeout=90)
-# llm = OpenAI(model="gpt-4o", temperature=0,seed=seed)
 splitter = SentenceSplitter(chunk_size=1024, paragraph_separator="\n")
 embed_model = OpenAIEmbedding(model=args.llm_embedding_model)
 
@@ -154,18 +144,10 @@ from llama_index.core.node_parser import (
 )
 import logging
 from llama_index.core.schema import BaseNode, Document , ObjectType , TextNode
-from llama_index.core.constants import DEFAULT_CHUNK_SIZE
-from llama_index.core.node_parser.text.sentence import SENTENCE_CHUNK_OVERLAP
 
-def splitter_newLine() -> Callable[[str], List[str]]:
-    def split(text: str) -> List[str]:
-        return text.split("\n")
-    return split
 
 class SafeSemanticSplitter(SemanticSplitterNodeParser):
-
     safety_chunker : SentenceSplitter = SentenceSplitter(chunk_size=1024,paragraph_separator="\n")
-
     def _parse_nodes(
         self,
         nodes: Sequence[BaseNode],
@@ -184,6 +166,7 @@ class SafeSemanticSplitter(SemanticSplitterNodeParser):
         if not all_good:
             all_nodes = self.safety_chunker._parse_nodes(nodes,show_progress=show_progress,**kwargs)
         return all_nodes
+
 def parse_name_from_attr(node_attr, node_type):
     if node_attr is None or node_attr in ["", "nan"]:
         return None
@@ -204,7 +187,7 @@ def parse_name_from_attr(node_attr, node_type):
     return node_attr
 
 def convert_timestamp_to_datetime(timestamp):
-    # DEBUG: To be verified
+    ## DEBUG: To be verified -- The timestamps mapping has not been mention in the source released dataset or the repective paper. ##
     if args.host == "SimulatedW10":
         base_datetime = datetime(2022, 4, 8, 13, 0, 0 ,0)
     elif args.host == "SimulatedWS12":
@@ -247,15 +230,14 @@ def get_attack_description_from_df(subgraphs_df):
     subgraphs_df = timestamp_in_second(subgraphs_df, args.dataset, args.host)
     subgraphs_df = subgraphs_df.drop_duplicates()
     print("Total number of triples after dropping duplicated actions (within one second)", len(subgraphs_df))
-
     return subgraphs_df
+
 def prepare_document(df_id,processed_report):
     processed_report['description'] = processed_report['description'].str.replace("with attribute","")
     map_node_type = rename_node_type(args.dataset)
     for node,mapped_node in map_node_type.items():
         processed_report['description'] = processed_report['description'].str.replace(node,mapped_node, flags=re.I)
     processed_report['description'] = processed_report['description'].str.replace(r'\s{2,}', ' ', regex=True)
-    # processed_report['description'] = processed_report["description"].apply(shorten_long_words)
     processed_report['timestamp'] = pd.to_datetime(processed_report['timestamp'])
     processed_report = processed_report.sort_values(by='timestamp')
     processed_report = processed_report.groupby(processed_report['timestamp'].dt.floor('T'))['description'].value_counts().reset_index(name='count')
@@ -265,63 +247,6 @@ def prepare_document(df_id,processed_report):
     document = Document(text="".join([f"{row['description']} on {row['timestamp']}. \n" for _, row in processed_report.iterrows()]),doc_id = df_id,metadata={"file_name":(df_id)})
     return document, processed_report
 
-
-def rename_node_type(dataset):
-    if dataset == "tc3":
-        map_node_type = {"SUBJECT_PROCESS":"process","NetFlowObject":"flow","FILE_OBJECT_FILE":"file",
-                         "FILE_OBJECT_DIR":"fileDir","FILE_OBJECT_UNIX_SOCKET":"socket","UnnamedPipeObject":"pipe","FILE_OBJECT_BLOCK":"fileBlock",
-                         "FILE_OBJECT_CHAR":"fileChar","FILE_OBJECT_LINK":"fileLink","MemoryObject":"memory","SRCSINK_UNKNOWN":"srcsink","SUBJECT_UNIT":"unit"}
-    elif dataset == "optc":
-        map_node_type = {"PROCESS":"process","FILE":"file","FLOW":"flow","SHELL":"shell","THREAD":"thread","MODULE":"module","REGISTRY":"registry","TASK":"task"}
-    elif dataset == "nodlink":
-        map_node_type = {"PROCESS":"process","NET":"flow","FILE":"file"}
-    return map_node_type
-
-def shorten_long_words(text):
-    # Match words longer than 15 characters that appear after ':'
-    tokens = re.sub(r'(.* : )(\S*)( .* : )(\S*)(.*)',
-                           lambda m: f"{m.group(1)}//{m.group(2)}//{m.group(3)}//{m.group(4)}//{m.group(5)}", text)
-    tokens = tokens.split("//")
-    ip_pattern = re.compile(r'^\d{1,3}(\.\d{1,3}){3}$')
-    if len(tokens) > 1:
-        if not ip_pattern.match(tokens[1]):
-            subject_tokens = re.split(r'[._-]+', tokens[1])
-            if len(subject_tokens) > 2:
-                tokens[1] =  subject_tokens[-2] + '.' + subject_tokens[-1]
-        if not ip_pattern.match(tokens[3]):
-            object_tokens = re.split(r'[._-]+', tokens[3])
-            if len(object_tokens) > 2:
-                tokens[3] = object_tokens[-2] + '.' + object_tokens[-1]
-    modified_text = ''.join(tokens)
-    return modified_text
-
-
-def prepare_context_document(df_id,processed_report):
-    processed_report['description'] = processed_report['description'].str.replace("with attribute","")
-    processed_report['description'] = processed_report['description'].str.replace(r'\s{2,}', ' ', regex=True)
-    processed_report['timestamp'] = pd.to_datetime(processed_report['timestamp'])
-    processed_report = processed_report.sort_values(by='timestamp')
-    processed_report = processed_report.groupby('description').agg(count=('timestamp', 'size'),first_occurance=('timestamp', 'min'),last_occurance=('timestamp', 'max')).reset_index()
-    processed_report['first_occurance'] = processed_report['first_occurance'].dt.strftime("%Y-%m-%d %H:%M")
-    processed_report['last_occurance'] = processed_report['last_occurance'].dt.strftime("%Y-%m-%d %H:%M")
-    processed_report['description'] = processed_report.apply(lambda row: row['description'] + (' (' + str(row['count']) + ' times)' if row['count'] > 1 else ''), axis=1)
-    processed_report['description'] = processed_report.apply(lambda row: row['description'] + ((' between '+str(row['first_occurance']) + ' and '+str(row['last_occurance']) +' .') if row['count'] > 1 and row['first_occurance'] != row['last_occurance'] else (' , on ' + str(row['first_occurance']) + ' .')), axis=1)
-    processed_report = processed_report.sort_values(by='first_occurance').reset_index()
-    processed_report = processed_report[['description']]
-    document = Document(text=" \n".join([f"{row['description']}" for _, row in processed_report.iterrows()]),doc_id = df_id,metadata={"file_name":(df_id)})
-    return document,processed_report
-
-def prepare_document_without_timestamp(df_id,processed_report):
-    processed_report['description'] = processed_report['description'].str.replace("with attribute","")
-    processed_report['description'] = processed_report['description'].str.replace(r'\s{2,}', ' ', regex=True)
-    # processed_report['description'] = processed_report["description"].apply(shorten_long_words)
-    processed_report['timestamp'] = pd.to_datetime(processed_report['timestamp'])
-    processed_report = processed_report.sort_values(by='timestamp')
-    processed_report = processed_report['description'].value_counts().reset_index(name='count')
-    processed_report['description'] = processed_report.apply(lambda row: row['description'] + (' (' + str(row['count']) + ' times)' if row['count'] > 1 else ''), axis=1)
-    processed_report = processed_report[["description"]]
-    document = Document(text="".join([f"{row['description']}. \n" for _, row in processed_report.iterrows()]),doc_id = df_id,metadata={"file_name":(df_id)})
-    return document, processed_report
 
 def map_sparql_query(results_df_tmp):
     results_df_tmp = pd.DataFrame(results_df_tmp['results']['bindings'])
@@ -479,10 +404,7 @@ def index_generated_reports(generated_reports,generated_reports_index=None,repor
     del generated_reports_docs
     return generated_reports_index
 
-# @retry(
-#     stop=stop_after_attempt(2),  # Retry up to 2 times
-#     wait=wait_exponential(multiplier=1,min=2, max=10)  # Exponential backoff
-# )
+
 def prompt_chat_engine(chat_engine,prompt):
     response = chat_engine.chat(prompt)
     display_markdown(response.response)
@@ -508,25 +430,13 @@ def retrieve_and_summarize_documents(doc_ids,vector_index,processed_reports,spli
             filtered_ioc_lst = []
             for stage in APT_stages:
                 filtered_ioc_lst.extend(retrieve_IOC_list(chat_engine,retrieve_prompt.replace("{DOC_ID}",doc_id).replace("{STAGE}",stage),processed_reports[doc_id]))
-                # if "context" in doc_id:
-                #     filtered_ioc_lst.extend(retrieve_IOC_list(chat_engine,retrieve_prompt.replace("{DOC_ID}",doc_id).replace("{STAGE}",stage),processed_reports[doc_id]))
-                # else:
-                #     filtered_ioc_lst.extend(retrieve_IOC_list(chat_engine,retrieve_prompt.replace("{DOC_ID}", "").replace("{STAGE}", stage), processed_reports[doc_id]))
         else:
             if retrieve_prompt is None:
                 retrieve_prompt = All_Prompts["retrieve_ioc"]
             filtered_ioc_lst = retrieve_IOC_list(chat_engine,retrieve_prompt.replace("{DOC_ID}",doc_id),processed_reports[doc_id])
-            # if "context" in doc_id:
-            #     filtered_ioc_lst = retrieve_IOC_list(chat_engine,retrieve_prompt.replace("{DOC_ID}",doc_id),processed_reports[doc_id])
-            # else:
-            #     filtered_ioc_lst = retrieve_IOC_list(chat_engine, retrieve_prompt.replace("{DOC_ID}", ""),processed_reports[doc_id])
         print("Summarizing",doc_id)
         IOC_LIST = '"' +'", "'.join(filtered_ioc_lst)+'"'
         this_summarize_prompt = summarize_prompt.replace("{DOC_ID}",doc_id).replace("{IOC_LIST}",IOC_LIST)
-        # if "context" in doc_id:
-        #     this_summarize_prompt = summarize_prompt.replace("{DOC_ID}",doc_id).replace("{IOC_LIST}",IOC_LIST)
-        # else:
-        #     this_summarize_prompt = summarize_prompt.replace("{DOC_ID}", "").replace("{IOC_LIST}", IOC_LIST)
         print("Prompt: ",this_summarize_prompt)
         generated_reports[doc_id] =prompt_chat_engine(chat_engine, this_summarize_prompt)
         filtered_ioc_lsts[doc_id] = filtered_ioc_lst
@@ -560,7 +470,6 @@ def detect_and_filter_hallucination(iocs_list,processed_report):
             n_hallucination +=1
             filtered_ioc_lst.remove(ioc)
     print("Number of detected hallucinations is: ", n_hallucination)
-    # print("The filter IOCs list is:",filtered_ioc_lst )
     return filtered_ioc_lst
 
 
@@ -585,6 +494,7 @@ def ensure_dir(file_path):
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
+
 def save_checkpont(save_path,vector_index_dic, memory,save_reports):
     ensure_dir(save_path)
     torch.save(memory,(save_path+"memory.pt"))
@@ -594,6 +504,7 @@ def save_checkpont(save_path,vector_index_dic, memory,save_reports):
     for report_name, report in save_reports.items():
         with open((save_path+report_name+".md"), 'w') as f:
             f.write(report)
+
 def load_checkpont(load_path):
     storage_context = StorageContext.from_defaults(persist_dir=(load_path+"index_analyzed_log_documents"))
     vector_index = load_index_from_storage(storage_context)
@@ -617,12 +528,11 @@ def enrich_with_ioc(ioc,ioc_type,processed_reports,generated_reports,last_comp_r
     context_generated_reports, context_filtered_ioc_lsts, memory = retrieve_and_summarize_documents([context_doc_id], vector_index, processed_reports, split_by_APT_stages=True,summarize_prompt=All_Prompts["summarize_report"], retrieve_prompt=All_Prompts["retrieve_ioc_multiStage"])
     generated_reports[context_doc_id] = context_generated_reports[context_doc_id]
     generated_reports_index = index_generated_reports(generated_reports,generated_reports_index, context_doc_id)
-    # comprehensive_report, memory, chat_engine = retrieve_and_generated_comprehensive_report(generated_reports_index,split_by_APT_stages=True,generate_prompt=All_Prompts["summarize_comp_report_iocs"],retrieve_prompt=All_Prompts["retrieve_ioc_multiStage_comp"])
-    # comprehensive_report, memory, chat_engine = generate_comprehensive_report(generated_reports_index,prompt=All_Prompts["summarize_comp_report"])
     the_filter_map = MetadataFilters(filters=[MetadataFilter(key="file_name", value=last_comp_report, operator="=="),MetadataFilter(key="file_name", value=context_doc_id, operator="==")],condition="or")
     comprehensive_report, memory, chat_engine = generate_comprehensive_report(generated_reports_index,prompt=All_Prompts["augment_comp_report"].replace("{COMP}",last_comp_report).replace("{REPORT}",context_doc_id),the_filter_map=the_filter_map)
     del context_filtered_ioc_lsts,context_df,context_description_df, context_processed_report,context_doc,context_doc_id
     return comprehensive_report,generated_reports,memory, chat_engine
+
 if __name__ == '__main__':
     start_time = time.time()
     print(args)
@@ -635,7 +545,6 @@ if __name__ == '__main__':
         seed_everything(seed)
         # Get the reprots from original path
         stats_report_path = args.root_path + "results/" + args.exp_name + "/" + args.GNN_model_name.replace(".model","") + "/run"+str(run)+"_" + args.inv_exp_name + "_correlated_subgraphs_statistics.csv"
-        # detected_subgraphs_path = args.root_path + "results/" + args.exp_name + "/" + args.GNN_model_name.replace(".model","") +"/run"+str(run)+"_" + args.inv_exp_name + "_constructed_subgraphs_nx.pt"
         inv_reports_path = args.root_path + "investigation/" + args.exp_name + "/" + args.GNN_model_name.replace(".model","") +"/run"+str(run)+"_" + args.inv_exp_name
         subgraphs_stats_df = pd.read_csv(stats_report_path)
         ioc_f = args.root_path + "query_graphs_IOCs.json"
@@ -674,7 +583,6 @@ if __name__ == '__main__':
         if args.load_index:
             print("loading the vector index from the path:",output_path)
             vector_index, generated_reports_index, memory, generated_reports = load_checkpont(load_path=output_path)
-            # generated_reports = {k: v for k, v in generated_reports.items() if k in report_names}
         else:
             vector_index = index_documents(all_documents)
         generated_reports, filtered_ioc_lsts,  memory =  retrieve_and_summarize_documents(
@@ -682,7 +590,6 @@ if __name__ == '__main__':
         del filtered_ioc_lsts
         generated_reports_index = index_generated_reports(generated_reports)
         comprehensive_report, memory, chat_engine = retrieve_and_generated_comprehensive_report(generated_reports_index,split_by_APT_stages=True,generate_prompt=All_Prompts["summarize_comp_report_iocs"],retrieve_prompt=All_Prompts["retrieve_ioc_multiStage_comp"])
-        # comprehensive_report, memory, chat_engine = generate_comprehensive_report(generated_reports_index,prompt=All_Prompts["summarize_comp_report"])
         del all_documents
         comp_report = 0
         visited_iocs = []

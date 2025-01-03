@@ -654,19 +654,3 @@ def get_investigation_queries(host,SourceDataset):
         sparql_queries[sparql_name] = sparql_query.replace("<DATASET>", host).replace("<SourceDataset>", SourceDataset)
     return sparql_queries
 
-########################### DRAFT ######################################
-
-# """,
-# 'construct_subgraphs': """
-# PREFIX graph: <https://DARPA_TC3.graph/<DATASET>/>
-# SELECT ?s_uuid ?predicate ?o_uuid ?timestamp
-# FROM <https://DARPA_TC3.graph/<DATASET>>
-# WHERE{
-#     << ?subject ?predicate ?object >> graph:timestamp ?timestamp .
-#     ?subject graph:uuid ?s_uuid .
-#     ?object graph:uuid ?o_uuid .
-#     FILTER(?s_uuid IN <ANOMALIES_LIST> ) .
-#     FILTER(?o_uuid IN <ANOMALIES_LIST> ) .
-# }
-# """,
-# ##########################################################33

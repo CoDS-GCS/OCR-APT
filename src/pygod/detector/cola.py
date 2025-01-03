@@ -142,28 +142,6 @@ class CoLA(DeepDetector):
                         **kwargs).to(self.device)
     def validate_model(self,data, visualize=False,fig_title=None):
         pass
-        # x = data.x.to(self.device)
-        # edge_index = data.edge_index.to(self.device)
-        #
-        # pos_logits, neg_logits = self.model(x, edge_index)
-        # logits = torch.cat([pos_logits[data.active_mask],
-        #                     neg_logits[data.active_mask]])
-        # n_pos_logits = len(pos_logits[data.active_mask])
-        # n_neg_logits = len(neg_logits[data.active_mask])
-        # con_label = torch.cat([torch.ones(n_pos_logits),
-        #                        torch.zeros(n_neg_logits)]).to(self.device)
-        #
-        # loss = self.model.loss_func(logits, con_label)
-        #
-        # score = neg_logits[data.active_mask] - pos_logits[data.active_mask]
-        #
-        # logits_val = torch.cat([pos_logits[data.val_mask],
-        #                     neg_logits[data.val_mask]])
-        #
-        # current_threshold = np.percentile(score.detach().cpu(), 100 * (1 - self.contamination))
-        # early_stop = self.model.loss_func_val(logits_val, label=data.y[data.val_mask], threshold = current_threshold, visualize=visualize,fig_title=fig_title)
-        #
-        # return early_stop
 
     def forward_model(self, data,train=True,visualize=False,label=None,fig_title=None):
         batch_size = data.batch_size
