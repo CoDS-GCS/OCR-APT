@@ -38,12 +38,14 @@ fi
 read -p "Do you want to train GNN model? (y/N): " trainGNN
 if [[ "$trainGNN" != "y" ]]
 then
-  read -p "Do you want to detect anomalous subgraphs with trained GNN model? (y/N): " detectSubgraphs
-  if [[ "$detectSubgraphs" == "y" ]]
-  then
-    read -p "Enter the GNN model full name: " load_model
-  fi
+  read -p "Enter the GNN model full name: " load_model
 fi
+read -p "Do you want to detect anomalous subgraphs with trained GNN model? (y/N): " detectSubgraphs
+if [[ "$detectSubgraphs" != "y" ]]
+then
+  read -p "Enter the experiment name for anomalous subgraphs: " inv_logs_name
+fi
+
 # default training parameters
 batch_size=0
 HiddenLayer=32
@@ -68,7 +70,6 @@ then
   read -p "Enter the LLM investigation experiment name (output): " llm_exp_name
   if [[ "$detectSubgraphs" != "y" ]]
   then
-    read -p "Enter the experiment name for anomalous subgraphs: " inv_logs_name
     read -p "Do you want to load previously indexed subgraphs (y/N): " load_index
   fi
 fi
@@ -81,8 +82,8 @@ abnormality="Moderate"
 
 
 transfor_to_RDF () {
-  host=$1
-  dataset=$2
+  dataset=$1
+  host=$2
   root_path=$3
   source_graph=${host}
   python -B -u ../src/transform_to_RDF.py --dataset ${dataset} --host ${host} --root-path ${root_path} --source-graph ${source_graph} ${rdf_parameter} >> ../logs/${host}/${exp_name}/Transform_to_RDF_${date}.txt
@@ -98,8 +99,8 @@ transfor_to_RDF () {
 }
 
 encode_to_PYG () {
-  host=$1
-  dataset=$2
+  dataset=$1
+  host=$2
   root_path=$3
   source_graph=${host}
   python -u -B ../src/encode_to_PyG.py --dataset ${dataset} --host ${host} --root-path ${root_path} --exp-name ${exp_name} --source-graph ${source_graph} ${pyg_parameters} >> ../logs/${host}/${exp_name}/Encode_RDF_to_PyG_${date}.txt
@@ -119,7 +120,7 @@ train_GNN_models () {
   root_path=${11}
   parameters=" --dropout ${dropout} --batch-size ${batch_size} --epochs ${ep} --runs ${runs} --lr ${learningRate}  --num-layers ${n_layers} --beta ${beta} --multiple-models --dynamic-contamination --flexable-rate ${minCon} --max-contamination ${maxCon}  "
   save_path="${detector}_Dr${dropout}_ly${n_layers}_bs${batch_size}_ep${ep}_beta${beta}_LR${learningRate}_Hly${HiddenLayer}"
-  logs="${detector}_bs${batch_size}_ep${ep}_Dr${dropout}_ly${n_layers}_beta${beta}_LR${learningRate}_dynCon${minCon}To${maxCon}_MultipleModels"
+  logs="Training_${detector}_bs${batch_size}_ep${ep}_Dr${dropout}_ly${n_layers}_beta${beta}_LR${learningRate}_dynCon${minCon}To${maxCon}_MultipleModels"
   if [[ "$HiddenLayer" == "D" ]]
   then
     parameters+=" --adjust-hidden-channels "
@@ -133,7 +134,6 @@ train_GNN_models () {
   then
     save_path+=".model"
     logs+="_${date}.txt"
-    mkdir -p ../logs/${host}/${exp_name}
     echo "Parameters are: ${parameters}"
     echo "save to: ${save_path}"
     python -B -u ../src/train_gnn_models.py --host ${host} --dataset ${dataset} --root-path ${root_path} --exp-name ${exp_name} --detector ${detector} ${parameters} --save-model ${save_path} >> ../logs/${host}/${exp_name}/${logs}
@@ -156,7 +156,7 @@ Detect_Anomolous_Nodes () {
   load_model=${11}
   root_path=${12}
   parameters=" --dropout ${dropout} --batch-size ${batch_size} --epochs ${ep} --runs ${runs} --lr ${learningRate}  --num-layers ${n_layers} --beta ${beta} --multiple-models --dynamic-contamination --flexable-rate ${minCon} --max-contamination ${maxCon} "
-  logs="Load_${detector}_bs${batch_size}_ep${ep}_Dr${dropout}_ly${n_layers}_beta${beta}_LR${learningRate}_dynConVal${minCon}To${maxCon}_MultipleModels"
+  logs="DetectAnomalousNodes_${detector}_bs${batch_size}_ep${ep}_Dr${dropout}_ly${n_layers}_beta${beta}_LR${learningRate}_dynConVal${minCon}To${maxCon}_MultipleModels"
   if [[ "$HiddenLayer" == "D" ]]
   then
     parameters+=" --adjust-hidden-channels "
@@ -183,19 +183,18 @@ Detect_Anomolous_Subgraph () {
   abnormality=$8
   investigation_parameters=" --min-nodes 3 --max-edges ${max_edges} --number-of-hops ${n_hop} --runs ${runs} --remove-duplicated-subgraph --get-node-attrs --expand-2-hop no --correlate-anomalous-once --top-k ${top_k} --abnormality-level ${abnormality}"
   logs_name="expand_${n_hop}_hop_MaxEdges${max_edges}_K${top_k}"
-  python -B -u ../src/detect_anomalous_subgraphs.py --host ${host} --dataset ${dataset} --root-path ${root_path} --exp-name ${exp_name} --model ${model_path}  --construct-from-anomaly-subgraph  ${investigation_parameters}  --inv-exp-name ${logs_name} ${more_param} >> ../logs/${host}/${exp_name}/investigating_${logs_name}_${date}.txt
-  echo ${logs_name}
+  python -B -u ../src/detect_anomalous_subgraphs.py --host ${host} --dataset ${dataset} --root-path ${root_path} --exp-name ${exp_name} --model ${model_path}  --construct-from-anomaly-subgraph  ${investigation_parameters}  --inv-exp-name ${logs_name} ${more_param} >> ../logs/${host}/${exp_name}/DetectAnomalousSubgraphs_${logs_name}_${date}.txt
 }
 
 generate_llm_investigator_reports () {
   host=$1
   load_model=$2
-  inv_logs_name=$3
-  load_index=$4
-  embed_model=$5
-  anomalous=$6
-  abnormality=$7
-  root_path=$8
+  load_index=$3
+  embed_model=$4
+  anomalous=$5
+  abnormality=$6
+  root_path=$7
+  inv_logs_name="expand_${n_hop}_hop_MaxEdges${max_edges}_K${top_k}"
   parameters=" --llm-exp-name ${llm_exp_name}"
   if [[ "$load_index" == "y" ]]
   then
@@ -207,11 +206,12 @@ generate_llm_investigator_reports () {
 
 execute_OCR_APT () {
   host=${1}
+  mkdir -p ../logs/${host}/${exp_name}
   root_path=../dataset/${SourceDataset}/${host}/experiments/
   echo "Run OCR-APT on host: ${host} "
   if [[ "$ToRDF" == "y" ]]
   then
-    echo "Converting to PyG"
+    echo "Converting to RDF"
     transfor_to_RDF ${dataset} ${host} ${root_path}
   fi
   if [[ "$encodePYG" == "y" ]]
@@ -219,22 +219,25 @@ execute_OCR_APT () {
     echo "Encoding to PyG"
     encode_to_PYG ${dataset} ${host} ${root_path}
   fi
-  if [[ "$detectSubgraphs" == "y" ]]
+  echo "load RDFs provenance graphs into the RDF graph engine"
+  read -p "Have you loaded provenance graphs into the database (y/N): " PG_loaded
+  if [[ "$PG_loaded" == "y" ]]
   then
-    echo "Detect anomolous nodes using the GNN model: ${load_model}"
-    Detect_Anomolous_Nodes ${detector} ${host} ${ep} ${beta} ${HiddenLayer} ${n_layers} ${batch_size} ${learningRate} ${minCon} ${maxCon} ${load_model} ${root_path}
-    echo "Detect anomolous subgraphs"
-    inv_logs_name=$(Detect_Anomolous_Subgraph ${host} ${root_path} ${max_edges} ${top_k} ${load_model} ${n_hop} ${n_layers} ${abnormality})
-  fi
-  if [[ "$trainGNN" == "y" ]]
-  then
-    echo "Train GNN models"
-    train_GNN_models ${detector} ${host} ${ep} ${beta} ${HiddenLayer} ${n_layers} ${batch_size} ${learningRate} ${minCon} ${maxCon} ${root_path}
-  fi
-  if [[ "$generateReports" == "y" ]]
-  then
-    echo "Generate attack reprots"
-    generate_llm_investigator_reports ${host} ${load_model} ${inv_logs_name} ${load_index} ${embed_model} ${anomalous} ${abnormality} ${root_path}
+    if [[ "$trainGNN" == "y" ]]
+    then
+      echo "Train OCRGCN models, then utilize it to detect anomolous nodes"
+      train_GNN_models ${detector} ${host} ${ep} ${beta} ${HiddenLayer} ${n_layers} ${batch_size} ${learningRate} ${minCon} ${maxCon} ${root_path}
+    fi
+    if [[ "$detectSubgraphs" == "y" ]]
+    then
+      echo "Detect anomolous subgraphs"
+      Detect_Anomolous_Subgraph ${host} ${root_path} ${max_edges} ${top_k} ${load_model} ${n_hop} ${n_layers} ${abnormality}
+    fi
+    if [[ "$generateReports" == "y" ]]
+    then
+      echo "Generate attack reprots"
+      generate_llm_investigator_reports ${host} ${load_model} ${load_index} ${embed_model} ${anomalous} ${abnormality} ${root_path}
+    fi
   fi
   sleep 1m
 }
@@ -259,5 +262,3 @@ else
 fi
 
 echo "Done"
-
-}

@@ -49,7 +49,7 @@ Detect_Anomolous_Nodes () {
   load_model=${11}
   root_path=${12}
   parameters=" --dropout ${dropout} --batch-size ${batch_size} --epochs ${ep} --runs ${runs} --lr ${learningRate}  --num-layers ${n_layers} --beta ${beta} --multiple-models --dynamic-contamination --flexable-rate ${minCon} --max-contamination ${maxCon} "
-  logs="Load_${detector}_bs${batch_size}_ep${ep}_Dr${dropout}_ly${n_layers}_beta${beta}_LR${learningRate}_dynConVal${minCon}To${maxCon}_MultipleModels"
+  logs="DetectAnomalousNodes_${detector}_bs${batch_size}_ep${ep}_Dr${dropout}_ly${n_layers}_beta${beta}_LR${learningRate}_dynConVal${minCon}To${maxCon}_MultipleModels"
   if [[ "$HiddenLayer" == "D" ]]
   then
     parameters+=" --adjust-hidden-channels "
@@ -75,20 +75,19 @@ Detect_Anomolous_Subgraph () {
   abnormality=$8
   investigation_parameters=" --min-nodes 3 --max-edges ${max_edges} --number-of-hops ${n_hop} --runs ${runs} --remove-duplicated-subgraph --get-node-attrs --expand-2-hop no --correlate-anomalous-once --top-k ${top_k} --abnormality-level ${abnormality}"
   logs_name="expand_${n_hop}_hop_MaxEdges${max_edges}_K${top_k}_ly${n_layers}"
-  python -B -u ../src/detect_anomalous_subgraphs.py --host ${host} --dataset ${dataset} --root-path ${root_path} --exp-name ${exp_name} --model ${model_path}  --construct-from-anomaly-subgraph  ${investigation_parameters}  --inv-exp-name ${logs_name} ${more_param} >> ../logs/${host}/${exp_name}/investigating_${logs_name}_${date}.txt
-  echo ${logs_name}
+  python -B -u ../src/detect_anomalous_subgraphs.py --host ${host} --dataset ${dataset} --root-path ${root_path} --exp-name ${exp_name} --model ${model_path}  --construct-from-anomaly-subgraph  ${investigation_parameters}  --inv-exp-name ${logs_name} ${more_param} >> ../logs/${host}/${exp_name}/DetectAnomalousSubgraphs_${logs_name}_${date}.txt
 }
 
 generate_llm_investigator_reports () {
   host=$1
   load_model=$2
-  inv_logs_name=$3
-  load_index=$4
-  embed_model=$5
-  anomalous=$6
-  abnormality=$7
-  root_path=$8
+  load_index=$3
+  embed_model=$4
+  anomalous=$5
+  abnormality=$6
+  root_path=$7
   parameters=" --llm-exp-name ${llm_exp_name}"
+  inv_logs_name="expand_${n_hop}_hop_MaxEdges${max_edges}_K${top_k}"
   if [[ "$load_index" == "y" ]]
   then
     parameters+=" --load-index"
@@ -131,12 +130,12 @@ execute_OCR_APT () {
     echo "Detect anomolous nodes using the GNN model: ${load_model}"
     Detect_Anomolous_Nodes ${detector} ${host} ${ep} ${beta} ${HiddenLayer} ${n_layers} ${batch_size} ${learningRate} ${minCon} ${maxCon} ${load_model} ${root_path}
     echo "Detect anomolous subgraphs"
-    inv_logs_name=$(Detect_Anomolous_Subgraph ${host} ${root_path} ${max_edges} ${top_k} ${load_model} ${n_hop} ${n_layers} ${abnormality})
+    Detect_Anomolous_Subgraph ${host} ${root_path} ${max_edges} ${top_k} ${load_model} ${n_hop} ${n_layers} ${abnormality}
   fi
   if [[ "$generateReports" == "y" ]]
   then
     echo "Generate attack reprots"
-    generate_llm_investigator_reports ${host} ${load_model} ${inv_logs_name} ${load_index} ${embed_model} ${anomalous} ${abnormality} ${root_path}
+    generate_llm_investigator_reports ${host} ${load_model} ${load_index} ${embed_model} ${anomalous} ${abnormality} ${root_path}
   fi
   sleep 1m
 }
