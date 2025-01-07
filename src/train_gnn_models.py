@@ -7,12 +7,11 @@ import torch
 from torch_geometric.data import Data
 from torch_geometric.utils.hetero import group_hetero_graph
 from torch_geometric.seed import seed_everything
-from statistics import mean
 import os
 import psutil
 import time
 from pygod.detector import OCGNN, DOMINANT , AnomalyDAE, CoLA , CONAD, GAE, GUIDE, OCRGCN
-from pygod.metric import eval_roc_auc , eval_average_precision, eval_precision_at_k, eval_recall_at_k, eval_f1
+from pygod.metric import eval_roc_auc
 import numpy as np
 
 from dataset_pyg_custom import PygNodePropPredDataset_custom
@@ -35,7 +34,7 @@ parser.add_argument('--save-model', type=str, default=None)
 parser.add_argument('--detector', type=str, default="OCRGCN")
 parser.add_argument('--multiple-models', action="store_true", default=False)
 parser.add_argument('--dynamic-contamination', action="store_true", default=False)
-parser.add_argument('--runs', type=int, default=3)
+parser.add_argument('--runs', type=int, default=1)
 parser.add_argument('--num-layers', type=int, default=3)
 parser.add_argument('--input-layer', type=int, default=64)
 parser.add_argument('--hidden-channels', type=int, default=32)
@@ -95,7 +94,7 @@ def delete_folder(dir_path):
         shutil.rmtree(dir_path)
         print("Folder Deleted")
     except OSError as e:
-        print("Error Deleting : %s : %s" % (dir_path, e.strerror))
+        print("Deleting : %s : %s" % (dir_path, e.strerror))
     return
 
 def man_confusion_matrix(y_true, y_pred):
@@ -126,12 +125,6 @@ def print_predict_evaluation_metrics(tp,tn,fp,fn,message=None):
         f_measure = None
     else:
         f_measure = 2 * (precision * recall) / (precision + recall)
-    print("Evaluation on Anomaly Detection task")
-    if message:
-        print(message)
-    print("TP: {}\tTN: {}\tFP: {}\tFN: {}".format(tp, tn, fp, fn))
-    print("Accuracy: {}\tPrecision: {}\tRecall: {}\tF-1: {}".format(accuracy, precision, recall, f_measure))
-    print("TPR: {}\tFPR: {}".format(tpr, fpr))
     anomaly_results_df = pd.DataFrame({'accuracy': [accuracy], 'precision': [precision],'recall': [recall],
                                        'f_measure':[f_measure],'tp':[tp],'tn': [tn],'fp': [fp],'fn': [fn]})
     anomaly_results_df['tpr'] = tpr
@@ -202,8 +195,6 @@ def pyGod(run,seed):
             'labels': [0, 1]
         })['cm']
         print('validating set CM:\n', valid_cm)
-        tp, fp, tn, fn = man_confusion_matrix(y_true=y_true[homo_data.val_mask], y_pred=y_pred_val)
-        print_predict_evaluation_metrics(tp, tn, fp, fn)
         result = train_acc, valid_acc
         print("Validation time: ", time.time() - validate_time, "seconds.")
         return result
@@ -437,7 +428,7 @@ def pyGod(run,seed):
         return alerts_2hop , anomaly_2hop_results_df
 
 
-    def test(detector,homo_data,analyze_per_type=True,fig_title=None):
+    def test(detector,homo_data,fig_title=None):
         predict_time = time.time()
         global final_y_pred_testing,final_y_prob_testing,final_score_testing
         try:
@@ -465,7 +456,6 @@ def pyGod(run,seed):
         })['acc']
         y_true_testing = y_true[homo_data.test_mask]
         y_pred_testing = y_pred
-        node_type_testing = node_type[homo_data.test_mask]
         test_cm = evaluator_cm.eval({
             'y_true': y_true_testing,
             'y_pred': y_pred_testing,
@@ -475,30 +465,6 @@ def pyGod(run,seed):
         print('Testing set CM:\n', test_cm)
         tp, fp, tn, fn = man_confusion_matrix(y_true=y_true_testing, y_pred=y_pred_testing)
         anomaly_results_df = print_predict_evaluation_metrics(tp, tn, fp, fn)
-        if len(y_true_testing.unique()) > 1:
-            anomaly_results_df['auc'] = eval_roc_auc(y_true_testing, score)
-            print('AUC Score:', anomaly_results_df['auc'].item())
-            anomaly_results_df['avg_precision'] = eval_average_precision(y_true_testing, score)
-            print('Average precision:', anomaly_results_df['avg_precision'].item())
-            top_k = min(args.top_k,len(y_true_testing))
-            anomaly_results_df['precision_at_k'] = eval_precision_at_k(y_true_testing, score,top_k)
-            print("precision at",top_k,"is",anomaly_results_df['precision_at_k'].item())
-            anomaly_results_df['recall_at_k'] = eval_recall_at_k(y_true_testing, score, top_k)
-            print("recall at", top_k, "is", anomaly_results_df['recall_at_k'].item())
-        if analyze_per_type:
-            for subject_node in subject_nodes:
-                print("\n****************************************")
-                y_true_per_type = y_true_testing[node_type_testing == key2int[subject_node]]
-                y_pred_per_type = y_pred_testing[node_type_testing == key2int[subject_node]]
-                test_cm_per_type = evaluator_cm.eval({
-                    'y_true': y_true_per_type,
-                    'y_pred': y_pred_per_type,
-                    'labels': [0, 1]
-                })['cm']
-                tp, fp, tn, fn = man_confusion_matrix(y_true=y_true_per_type, y_pred=y_pred_per_type)
-                message = "Profiling results of node type:" + subject_node
-                print_predict_evaluation_metrics(tp, tn, fp, fn, message)
-                del y_true_per_type, y_pred_per_type, test_cm_per_type
         detection_time = time.time() - predict_time
         print("Detection time: ", detection_time , "seconds.")
         return anomaly_results_df, y_pred, score, y_prob,detection_time, test_acc
@@ -522,8 +488,8 @@ def pyGod(run,seed):
     split_idx = dataset.get_idx_split('node_type')
     end_t = datetime.datetime.now()
     print("dataset init time=", end_t - start_t, " sec.")
-    evaluator = Evaluator(name='ogbn-mag', p_eval_metric='acc')
-    evaluator_cm = Evaluator(name='ogbn-mag', p_eval_metric='cm')
+    evaluator = Evaluator(name='ocrapt', p_eval_metric='acc')
+    evaluator_cm = Evaluator(name='ocrapt', p_eval_metric='cm')
 
 
     # We do not consider those attributes for now.
@@ -533,12 +499,10 @@ def pyGod(run,seed):
     to_remove_rels = []
     for keys, (row, col) in data.edge_index_dict.items():
         if (keys[2] in to_remove_subject_object) or (keys[0] in to_remove_subject_object):
-            # print("to remove keys=",keys)
             to_remove_rels.append(keys)
 
     for keys, (row, col) in data.edge_index_dict.items():
         if (keys[1] in to_remove_pedicates):
-            # print("to remove keys=",keys)
             to_remove_rels.append(keys)
             to_remove_rels.append((keys[2], '_inv_' + keys[1], keys[0]))
 
@@ -549,11 +513,9 @@ def pyGod(run,seed):
     for key in to_remove_subject_object:
         data.num_nodes_dict.pop(key, None)
 
-    # dic_results[dataset_name]["data"] = str(data)
     edge_index_dict = data.edge_index_dict
 
     key_lst = list(edge_index_dict.keys())
-    # if not args.consider_direction:
     ##############add inverse edges ###################
     for key in key_lst:
         r, c = edge_index_dict[(key[0], key[1], key[2])]
@@ -633,38 +595,24 @@ def pyGod(run,seed):
         if args.multiple_models:
             all_tp, all_tn, all_fp, all_fn = 0,0,0,0
             detection_time_run = 0
-            auc_dic,avg_precision,precision_at_k,recall_at_k = {},[],[],[]
             for subject_node in subject_nodes:
                 print("****************************************")
                 print("Testing with model for node type:", subject_node)
                 model_path = root_path + "models/" +args.exp_name + "/" + subject_node + "_"+ args.load_model
                 detector = torch.load(model_path)
                 homo_data_per_type,contamination = split_per_node_type(homo_data,subject_node)
-                anomaly_results_df_subject, y_pred, score, y_prob,detection_time_subject,test_acc = test(detector, homo_data_per_type,analyze_per_type=False,fig_title=str(out_path+"_"+subject_node))
+                anomaly_results_df_subject, y_pred, score, y_prob,detection_time_subject,test_acc = test(detector, homo_data_per_type,fig_title=str(out_path+"_"+subject_node))
                 log_raised_alarms(homo_data_per_type, y_pred, score, y_prob, target_node=subject_node,run=run)
                 all_tp += anomaly_results_df_subject['tp'].item()
                 all_tn += anomaly_results_df_subject['tn'].item()
                 all_fp += anomaly_results_df_subject['fp'].item()
                 all_fn += anomaly_results_df_subject['fn'].item()
                 detection_time_run += detection_time_subject
-                if 'auc' in anomaly_results_df_subject.columns:
-                    auc_dic[subject_node] = anomaly_results_df_subject['auc'].item()
-                if 'avg_precision' in anomaly_results_df_subject.columns:
-                    avg_precision.append(anomaly_results_df_subject['avg_precision'].item())
-                if 'precision_at_k' in anomaly_results_df_subject.columns:
-                    precision_at_k.append(anomaly_results_df_subject['precision_at_k'].item())
-                if 'recall_at_k' in anomaly_results_df_subject.columns:
-                    recall_at_k.append(anomaly_results_df_subject['recall_at_k'].item())
                 if args.save_emb and run == 0:
                     map_save_embedding(homo_data_per_type, detector.emb, mapping_nodes_df, subject_node)
                 del detector, homo_data_per_type, anomaly_results_df_subject, y_pred, score, y_prob,detection_time_subject, test_acc
             print("****************************************")
             anomaly_results_df_run = print_predict_evaluation_metrics(all_tp, all_tn, all_fp, all_fn,"Overall Evaluation results")
-            anomaly_results_df_run['avg_auc'] = mean(auc_dic.values())
-            print("Average AUC:", mean(auc_dic.values()))
-            print("Average avg_precision:", mean(avg_precision))
-            print("Average precision at :",args.top_k,"is", mean(precision_at_k))
-            print("Average recall at :",args.top_k,"is", mean(recall_at_k))
             print("Total detection time is:",detection_time_run)
         else:
             model_path = root_path + "models/"+args.exp_name+ "/" + args.load_model
@@ -680,7 +628,6 @@ def pyGod(run,seed):
         if args.multiple_models:
             all_tp, all_tn, all_fp, all_fn = 0, 0, 0, 0
             detection_time_run,train_time_run = 0,0
-            auc_dic,avg_precision,precision_at_k,recall_at_k = {},[],[],[]
             for subject_node in subject_nodes:
                 seed_everything(seed)
                 print("****************************************")
@@ -696,7 +643,7 @@ def pyGod(run,seed):
                 detector = inintailize_model(contamination,num_relations,batch_size)
                 detector,train_time = train(detector, homo_data_per_type,fig_title=str(out_path+"_"+subject_node))
                 result = validate(detector, homo_data_per_type,fig_title=str(out_path+"_"+subject_node))
-                anomaly_results_df_subject, y_pred, score, y_prob,detection_time_subject, test_acc = test(detector, homo_data_per_type,analyze_per_type=False,fig_title=str(out_path+"_"+subject_node))
+                anomaly_results_df_subject, y_pred, score, y_prob,detection_time_subject, test_acc = test(detector, homo_data_per_type,fig_title=str(out_path+"_"+subject_node))
                 result = result + (test_acc,)
                 log_raised_alarms(homo_data_per_type, y_pred, score, y_prob, target_node=subject_node,run=run)
                 print(f' Train accuracy: {result[0]:.3f}')
@@ -708,14 +655,6 @@ def pyGod(run,seed):
                 all_fn += anomaly_results_df_subject['fn'].item()
                 detection_time_run += detection_time_subject
                 train_time_run += train_time
-                if 'auc' in anomaly_results_df_subject.columns:
-                    auc_dic[subject_node] =  anomaly_results_df_subject['auc'].item()
-                if 'avg_precision' in anomaly_results_df_subject.columns:
-                    avg_precision.append(anomaly_results_df_subject['avg_precision'].item())
-                if 'precision_at_k' in anomaly_results_df_subject.columns:
-                    precision_at_k.append(anomaly_results_df_subject['precision_at_k'].item())
-                if 'recall_at_k' in anomaly_results_df_subject.columns:
-                    recall_at_k.append(anomaly_results_df_subject['recall_at_k'].item())
                 if args.debug_one_subject:
                     del detector
                     break
@@ -732,15 +671,8 @@ def pyGod(run,seed):
                 if args.save_emb and run == 0:
                     map_save_embedding(homo_data_per_type,detector.emb,mapping_nodes_df,subject_node)
                 del detector, homo_data_per_type, anomaly_results_df_subject, y_pred, score, y_prob,detection_time_subject, test_acc , result
-
-
             print("****************************************")
             anomaly_results_df_run = print_predict_evaluation_metrics(all_tp, all_tn, all_fp, all_fn,"Overall Evaluation results")
-            anomaly_results_df_run['avg_auc'] = mean(auc_dic.values())
-            print("Average AUC:", mean(auc_dic.values()))
-            print("Average avg_precision:", mean(avg_precision))
-            print("Average precision at :", args.top_k, "is", mean(precision_at_k))
-            print("Average recall at :", args.top_k, "is", mean(recall_at_k))
         else:
             seed_everything(seed)
             if args.batch_size_percentage:
@@ -764,18 +696,8 @@ def pyGod(run,seed):
             if args.save_emb and run == 0:
                 map_save_embedding(homo_data, detector.emb, mapping_nodes_df)
             del detector
-    # Confirm final overall results
-    test_cm = evaluator_cm.eval({
-        'y_true': y_true[homo_data.test_mask],
-        'y_pred': final_y_pred_testing[homo_data.test_mask],
-        'labels': [0, 1]
-    })['cm']
     print("\n*****************************************")
-    print('Overall Testing set CM:\n', test_cm)
-    tp, fp, tn, fn = man_confusion_matrix(y_true=y_true[homo_data.test_mask], y_pred=final_y_pred_testing[homo_data.test_mask])
-    print_predict_evaluation_metrics(tp, tn, fp, fn)
-    alerts_2hop,anomaly_2hop_results_df = predict_with_related_nodes(homo_data,y_true,final_y_pred_testing)
-    anomaly_results_df_run[['accuracy_2hop','precision_2hop','recall_2hop','f_measure_2hop','tp_2hop','tn_2hop','fp_2hop','fn_2hop','tpr_2hop','fpr_2hop']] = anomaly_2hop_results_df[['accuracy','precision','recall','f_measure','tp','tn','fp','fn','tpr','fpr']]
+    alerts_2hop,anomaly_results_df_run = predict_with_related_nodes(homo_data,y_true,final_y_pred_testing)
     final_auc = eval_roc_auc(y_true[homo_data.test_mask], final_score_testing[homo_data.test_mask])
     print("Final AUC is:",final_auc)
     log_raised_alarms(homo_data, final_y_pred_testing[homo_data.test_mask],

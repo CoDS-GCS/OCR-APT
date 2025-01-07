@@ -52,7 +52,7 @@ def clear_globals():
 parser = argparse.ArgumentParser(description='OCR-APT')
 parser.add_argument('--dataset', type=str,required=True)
 parser.add_argument('--host', type=str,required=True)
-parser.add_argument('--runs', type=int, default=3)
+parser.add_argument('--runs', type=int, default=1)
 parser.add_argument('--exp-name', type=str, required=True)
 parser.add_argument('--inv-exp-name', type=str, default=None)
 parser.add_argument('--model', type=str, required=True)

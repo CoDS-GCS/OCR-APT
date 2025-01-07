@@ -1,0 +1,12 @@
+,ocrapt
+num tasks,1
+num classes,2
+eval metric,acc
+task type,one class classification
+download_name,ocrapt
+add_inverse_edge,False
+has_node_attr,True
+has_edge_attr,True
+split,time
+is hetero,True
+binary,False

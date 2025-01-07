@@ -63,7 +63,7 @@ def delete_folder(dir_path):
         shutil.rmtree(dir_path)
         print("Folder Deleted")
     except OSError as e:
-        print("Error Deleting : %s : %s" % (dir_path, e.strerror))
+        print("Deleting : %s : %s" % (dir_path, e.strerror))
     ####################
     return
 
