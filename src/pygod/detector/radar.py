@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-""" Residual Analysis for Anomaly Detection in Attributed Networks
-"""
-# Author: Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
 
 import time
 import torch

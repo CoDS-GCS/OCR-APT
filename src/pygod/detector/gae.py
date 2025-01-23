@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-""" Graph Autoencoder
-"""
-# Author: Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
-
 import torch
 import warnings
 import torch.nn.functional as F

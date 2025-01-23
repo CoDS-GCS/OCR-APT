@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Metrics used to evaluate the outlier detection performance
-"""
-# Author: Yingtong Dou <ytongdou@gmail.com>, Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
-
 from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,

@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Generative Adversarial Attributed Network Anomaly Detection (GAAN)"""
-# Author: Ruitong Zhang <rtzhang@buaa.edu.cn>, Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
-
 import torch
 import warnings
 import torch.nn.functional as F

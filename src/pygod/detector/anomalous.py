@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-""" A Joint Modeling Approach for Anomaly Detection on
-    Attributed Networks
-"""
-# Author: Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
 
 import time
 import warnings

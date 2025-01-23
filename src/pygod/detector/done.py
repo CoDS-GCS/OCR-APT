@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Deep Outlier Aware Attributed Network Embedding (DONE)"""
-# Author: Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
-
 import torch
 import warnings
 

@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-This file including functions to generate different types of outliers given
-the input dataset for benchmarking
-"""
-# Author: Yingtong Dou <ytongdou@gmail.com>, Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
 
 import torch
 from torch_geometric.data import Data

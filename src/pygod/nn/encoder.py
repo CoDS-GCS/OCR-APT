@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Graph Neural Networks Encoders"""
-# Author: Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
 
 import torch
 import torch.nn.functional as F

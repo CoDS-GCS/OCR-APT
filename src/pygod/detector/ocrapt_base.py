@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Base classes for all outlier detector"""
-# Author: Yue Zhao <zhaoy@cmu.edu>, Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
-
 import time
 from inspect import signature
 from abc import ABC, abstractmethod

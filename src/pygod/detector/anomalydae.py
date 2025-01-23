@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""AnomalyDAE: Dual autoencoder for anomaly detection
-on attributed networks"""
+
 import warnings
 
 # Author: Xueying Ding <xding2@andrew.cmu.edu>,

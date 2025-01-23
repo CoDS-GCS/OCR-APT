@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Deep Anomaly Detection on Attributed Networks (DOMINANT)"""
-# Author: Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
-
 import torch
 from torch_geometric.nn import GCN
 

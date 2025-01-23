@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Outlier Aware Network Embedding for Attributed Networks (ONE)
-"""
-# Author: Xiyang Hu <xiyanghu@cmu.edu>, Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
-
 import time
 import warnings
 

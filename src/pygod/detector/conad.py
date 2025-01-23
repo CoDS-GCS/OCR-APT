@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Contrastive Attributed Network Anomaly Detection
-with Data Augmentation (CONAD)"""
-# Author: Zhiming Xu <zhimng.xu@gmail.com>
-# License: BSD 2 clause
-
 import torch
 import numpy as np
 from copy import deepcopy

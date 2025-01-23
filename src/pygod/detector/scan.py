@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-""" Structural Clustering Algorithm for Networks
-"""
-# Author: Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
 
 import math
 import time

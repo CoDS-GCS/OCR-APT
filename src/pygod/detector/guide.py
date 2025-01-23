@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Higher-order Structure based Anomaly Detection on Attributed
-    Networks (GUIDE)"""
-# Author: Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
 
 import os
 import warnings

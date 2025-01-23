@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Adversarial Outlier Aware Attributed Network Embedding (AdONE)"""
-# Author: Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
-
 import torch
 import warnings
 

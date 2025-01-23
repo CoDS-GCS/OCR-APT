@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Anomaly Detection on Attributed Networks via Contrastive
-Self-Supervised Learning (CoLA)"""
-# Author: Canyu Chen <cchen151@hawk.iit.edu>, Kay Liu <zliu234@uic.edu>
-# License: BSD 2 clause
 
 import torch
 from torch_geometric.nn import GCN
