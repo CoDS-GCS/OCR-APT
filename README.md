@@ -1,6 +1,6 @@
 # OCR-APT
 OCR-APT is an APT detection system capable of identifying anomalous nodes and subgraphs, performing alerts triage based on abnormality levels, and recovering attack stories to support comprehensive attack investigation.
-OCR-APT employs GNN-based subgraph anomaly detection to identify suspicious activities and utilizes LLMs to generate human-like attack reports.
+OCR-APT employs GNN-based subgraph anomaly detection to identify suspicious activities and utilizes LLMs to generate human-like attack reports.  
 This is the repository of the submitted paper: **OCR-APT: Reconstructing APT Stories through Subgraph Anomaly Detection and LLMs.**
 
 ## Repository Roadmap
@@ -15,3 +15,11 @@ The system consist of multiple python scripts and other bash script to command t
 
 ## OCR-APT system Architecture 
 ![System Architecture](OCR-APT-system.png)
+
+## Experiments with locally deployed LLMs
+### **Experiment Summary** 
+We evaluated OCR-APT using a locally deployed language model and compared its generated reports with those produced by ChatGPT. Specifically, we deployed **LLAMA3 (8B parameters)** on a machine with 4 CPU cores, an 8GB GPU, and 22GB of RAM.  
+To optimize performance, we experimented with different local embedding models, analyzing their outputs to determine the most effective one.  
+Our findings show that **LLAMA3, when paired with the best-performing embedding model, produced reports of comparable quality to ChatGPT**.  
+
+Detailed experiment results are available in this [spreadsheet](Experiments_with_locally_deployed_LLMs.xlsx).  
