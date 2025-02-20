@@ -22,4 +22,4 @@ We evaluated OCR-APT using locally deployed LLMs and compared its generated repo
 Specifically, we deployed **LLAMA3 (8B parameters)** on a machine with 4 CPU cores, an 8GB GPU, and 22GB of RAM. To optimize performance, we experimented with different local embedding models, analyzing their outputs to determine the most effective one.  
 Our findings show that **LLAMA3, when paired with the best-performing embedding model, produced reports of comparable quality to ChatGPT**.  
 
-Detailed experiment results are available in this [spreadsheet](Experiments_with_locally_deployed_LLMs.xlsx).  
+Experimental results are available in this [spreadsheet](Experiments_with_locally_deployed_LLMs.xlsx).  
