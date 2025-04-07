@@ -236,7 +236,7 @@ def pyGod(run,seed):
 
     def load_features(node_type):
         feat_path = root_path + args.exp_name + "/features/" + node_type + "/node-features.pt"
-        feat = torch.load(feat_path)
+        feat = torch.load(feat_path,weights_only=False)
         return feat
 
     def inintailize_model(contamination,num_relations,batch_size):
@@ -599,7 +599,7 @@ def pyGod(run,seed):
                 print("****************************************")
                 print("Testing with model for node type:", subject_node)
                 model_path = root_path + "models/" +args.exp_name + "/" + subject_node + "_"+ args.load_model
-                detector = torch.load(model_path)
+                detector = torch.load(model_path,weights_only=False)
                 homo_data_per_type,contamination = split_per_node_type(homo_data,subject_node)
                 anomaly_results_df_subject, y_pred, score, y_prob,detection_time_subject,test_acc = test(detector, homo_data_per_type,fig_title=str(out_path+"_"+subject_node))
                 log_raised_alarms(homo_data_per_type, y_pred, score, y_prob, target_node=subject_node,run=run)
@@ -616,7 +616,7 @@ def pyGod(run,seed):
             print("Total detection time is:",detection_time_run)
         else:
             model_path = root_path + "models/"+args.exp_name+ "/" + args.load_model
-            detector = torch.load(model_path)
+            detector = torch.load(model_path,weights_only=False)
             anomaly_results_df_run, y_pred, score, y_prob,detection_time_run, test_acc = test(detector, homo_data,fig_title=out_path)
             log_raised_alarms(homo_data, y_pred, score, y_prob, run=run)
             print("Detection time is:", detection_time_run)

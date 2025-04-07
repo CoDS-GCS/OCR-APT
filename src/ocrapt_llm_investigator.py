@@ -510,7 +510,7 @@ def load_checkpont(load_path):
     vector_index = load_index_from_storage(storage_context)
     storage_context = StorageContext.from_defaults(persist_dir=(load_path+"index_generated_reports"))
     generated_reports_index = load_index_from_storage(storage_context)
-    memory = torch.load(load_path+"memory.pt")
+    memory = torch.load(load_path+"memory.pt",weights_only=False)
     generated_reports = {}
     for report_path in glob.glob(load_path+"*.md"):
         report_name = report_path.split("/")[-1].replace(".md","")
