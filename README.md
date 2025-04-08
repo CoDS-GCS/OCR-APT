@@ -4,13 +4,15 @@ OCR-APT employs GNN-based subgraph anomaly detection to identify suspicious acti
 This is the repository of the submitted paper: **OCR-APT: Reconstructing APT Stories through Subgraph Anomaly Detection and LLMs.**
 
 ## Repository Roadmap
-The input to the system are kernel audit logs in a csv format.
-The system consist of multiple python scripts and other bash script to command them in an interactive way.
-- `/src` directory holds all python scripts.
+The input to the system is audit logs in a CSV format.
+The system consists of multiple Python scripts and other bash scripts that command them in an interactive way.
+- `/src` directory holds all Python scripts.
+  - `/src/sparql_queries.py` all SPARQL queries used to construct subgraphs from the `GraphDB` database 
+  - `/src/llm_prompt.py` all prompts used by the LLM-based attack investigator  
 - `/bash_src` directory holds all bash scripts.
 - `/recovered_reports` directory contains all recovered reports in our experiments.
-- `/groundtruth` directory contains the ground truth labels, each file contains malicious nodes UUID in a specific dataset/host. It should be moved to the dataset directory for reproducing results
-- `/logs` directory is the default location for all generated system logs
+- `/groundtruth` directory contains the ground truth labels, each file contains the malicious nodes' UUID in a specific dataset/host. It should be moved to the dataset directory to reproduce the results.
+- `/logs` directory is the default location for all generated system logs.
 - `/dataset` directory is the default location for training and testing audit logs, ground truth labels, experiments checkpoints, trained GNN models and results. Results include detected anomalous nodes and subgraphs, and recovered attack reports.
 
 ## OCR-APT system Architecture 
