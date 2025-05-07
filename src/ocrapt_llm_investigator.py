@@ -12,19 +12,25 @@ import torch
 import re
 from copy import deepcopy
 import numpy as np
+from openai import api_key
 from llama_index.llms.openai import OpenAI
 from llama_index.core.memory import ChatMemoryBuffer
-from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.node_parser import SentenceSplitter,SentenceSplitter, SemanticSplitterNodeParser
 from llama_index.core import VectorStoreIndex
+from llama_index.llms.ollama import Ollama
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.deepseek import DeepSeek
 from llama_index.core import StorageContext, load_index_from_storage
 from llama_index.core.vector_stores import MetadataFilters, MetadataFilter
-from SPARQLWrapper import SPARQLWrapper , JSON
+from llama_index.embeddings.ollama import OllamaEmbedding
+from SPARQLWrapper import SPARQLWrapper , JSON, POST, BASIC
+from typing import Any, Callable, List
 from datetime import datetime, timedelta
 from database_config import rename_node_type
 import pytz
 my_tz = pytz.timezone('America/Nipigon')
-import nest_asyncio
-nest_asyncio.apply()
+# import nest_asyncio
+# nest_asyncio.apply()
 import time
 from sparql_queries import get_investigation_queries
 from llm_prompt import get_llm_prompts
@@ -38,6 +44,13 @@ import ast
 import argparse
 import psutil
 from resource import *
+import logging
+from llama_index.core import set_global_handler
+import sys
+from typing import Sequence, Any, List
+import logging
+from llama_index.core.schema import BaseNode, Document , ObjectType , TextNode
+
 
 
 def seed_everything(seed: int):
@@ -78,12 +91,15 @@ parser.add_argument('--exp-name', type=str, required=True)
 parser.add_argument('--inv-exp-name', type=str, required=True)
 parser.add_argument('--llm-exp-name', type=str, required=True)
 parser.add_argument('--GNN-model-name', type=str, required=True)
+parser.add_argument('--llm-model-source', type=str,default="openai")
 parser.add_argument('--llm-model', type=str,default="gpt-4o-mini")
+parser.add_argument('--llm-embedding-model-source', type=str,default="openai")
 parser.add_argument('--llm-embedding-model', type=str,default="text-embedding-3-large")
 parser.add_argument('--abnormality-level', type=str,default="Moderate")
 parser.add_argument('--anomalous', type=str, default=None)
 parser.add_argument('--load-index', action="store_true", default=False)
 parser.add_argument('--runs', type=int, default=1)
+parser.add_argument('--standard-prompt', action="store_true", default=False)
 
 args = parser.parse_args()
 assert args.dataset in ['tc3', 'optc', 'nodlink']
@@ -107,17 +123,42 @@ with open("../config.json", "r") as f:
     else:
         repository_url = config["repository_url_tc3"]
 
-sparql_queries = get_investigation_queries(args.host,SourceDataset)
-All_Prompts = get_llm_prompts()
-os.environ["OPENAI_API_KEY"] = config["openai_api_key"]
-openai.api_key = os.environ["OPENAI_API_KEY"]
 seed = 360
 MAX_IOC_CONTEXT_ATTEMPT = 3
-llm = OpenAI(model=args.llm_model, temperature=0, seed=seed,timeout=90)
-splitter = SentenceSplitter(chunk_size=1024, paragraph_separator="\n")
-embed_model = OpenAIEmbedding(model=args.llm_embedding_model)
+TOKEN_LIMIT=50000
+CONTEXT_WINDOW=10000
+SIM_TOP_K=1
 
-def init_chat_engine(index,instructions,memory,filter_map=None,k=4):
+sparql_queries = get_investigation_queries(args.host,SourceDataset)
+All_Prompts = get_llm_prompts()
+if args.llm_model_source == "openai":
+    llm = OpenAI(model=args.llm_model, temperature=0, seed=seed, timeout=200,api_key=config["openai_api_key"])
+elif args.llm_model_source == "deepseek":
+    llm = DeepSeek(model=args.llm_model, api_key=config["deepseek_api_key"], temperature=0, seed=seed, timeout=600, context_window=CONTEXT_WINDOW)
+elif args.llm_model_source == "ollama":
+    try:
+        llm = Ollama(model=args.llm_model,base_url=config["ollama_ip"], temperature=0, seed=seed, request_timeout=600, keep_alive=600, context_window=CONTEXT_WINDOW)
+    except:
+        llm = Ollama(model=args.llm_model, temperature=0, seed=seed, request_timeout=600,keep_alive=600, context_window=CONTEXT_WINDOW)
+else:
+    print("Undefined model source")
+if args.llm_embedding_model_source == "openai":
+    os.environ["OPENAI_API_KEY"] = config["openai_api_key"]
+    api_key = os.environ["OPENAI_API_KEY"]
+    embed_model = OpenAIEmbedding(model=args.llm_embedding_model,api_key=config["openai_api_key"], timeout=200)
+elif args.llm_embedding_model_source == "ollama":
+    try:
+        embed_model = OllamaEmbedding(model_name=args.llm_embedding_model,base_url=config["ollama_ip"])
+    except:
+        embed_model = OllamaEmbedding(model_name=args.llm_embedding_model)
+elif args.llm_embedding_model_source == "huggingface":
+    embed_model = HuggingFaceEmbedding(model_name=args.llm_embedding_model)
+else:
+    print("Undefined model source")
+splitter = SentenceSplitter(chunk_size=1024, paragraph_separator="\n")
+
+def init_chat_engine(index,instructions,memory,filter_map=None,k=SIM_TOP_K):
+    print("Initialize the LLM model:", llm.model)
     if filter_map is not None:
         chat_engine = index.as_chat_engine(
             llm = llm,
@@ -136,14 +177,6 @@ def init_chat_engine(index,instructions,memory,filter_map=None,k=4):
             similarity_top_k=k,
         )
     return chat_engine
-
-from typing import Sequence, Any, List
-from llama_index.core.node_parser import (
-    SentenceSplitter,
-    SemanticSplitterNodeParser,
-)
-import logging
-from llama_index.core.schema import BaseNode, Document , ObjectType , TextNode
 
 
 class SafeSemanticSplitter(SemanticSplitterNodeParser):
@@ -217,11 +250,9 @@ def get_attack_description_from_df(subgraphs_df):
     subgraphs_df["object_type"] = subgraphs_df['object_type'].str.split("/").str[-1].str.lower()
     subgraphs_df["subject_attr"] = subgraphs_df.apply(
         lambda x: parse_name_from_attr(x["subject_attr"], x["subject_type"]), axis=1)
-    subgraphs_df["object_attr"] = subgraphs_df.apply(lambda x: parse_name_from_attr(x["object_attr"], x["object_type"]),
-                                                     axis=1)
+    subgraphs_df["object_attr"] = subgraphs_df.apply(lambda x: parse_name_from_attr(x["object_attr"], x["object_type"]),axis=1)
     subgraphs_df = subgraphs_df.dropna(subset=['subject_attr', 'object_attr'])
 
-    attack_description_df = pd.DataFrame()
     subgraphs_df["description"] = subgraphs_df["subject_attr"] + " " + subgraphs_df['predicate'] + " the " + \
                                   subgraphs_df["object_type"] + " : " + subgraphs_df["object_attr"]
     subgraphs_df = subgraphs_df[["description", "timestamp"]]
@@ -327,28 +358,30 @@ def index_documents(all_documents,vector_index=None,semantic=False):
     del nodes
     return vector_index
 
-def summarize_documents(doc_ids,vector_index,prompt,memory=None):
+def summarize_documents(doc_ids,vector_index,summarize_prompt=All_Prompts["standard_summarize_report"],memory=None):
     generated_reports = {}
     for doc_id in doc_ids:
         respons_time = time.time()
-        the_filter_map = MetadataFilters(filters=[MetadataFilter(key= "file_name", value= doc_id,operator="==")])
+        the_filter_map = MetadataFilters(filters=[MetadataFilter(key="file_name", value=doc_id, operator="==")])
         if memory is None:
             print("Initialze the memory")
-            tmp_memory = ChatMemoryBuffer.from_defaults(token_limit=50000)
+            tmp_memory = ChatMemoryBuffer.from_defaults(token_limit=TOKEN_LIMIT)
             chat_engine = init_chat_engine(vector_index,All_Prompts["instructions"],tmp_memory,filter_map=the_filter_map)
             del tmp_memory
         else:
             chat_engine = init_chat_engine(vector_index,All_Prompts["instructions"],memory,filter_map=the_filter_map)
         print("Summarizing",doc_id)
-        generated_reports[doc_id] = prompt_chat_engine(chat_engine, prompt.replace("<DOC_ID>",doc_id))
+        generated_reports[doc_id] = prompt_chat_engine(chat_engine, summarize_prompt.replace("{DOC_ID}",doc_id))
+        if generated_reports[doc_id] is None :
+            del generated_reports[doc_id]
         print("response times is: ", time.time() - respons_time)
     return generated_reports, memory
 
-def generate_comprehensive_report(generated_reports_index,prompt=All_Prompts["summarize_comp_report"],memory=None,the_filter_map=None):
+def generate_comprehensive_report(generated_reports_index,prompt=All_Prompts["standard_summarize_comp_report"],memory=None,the_filter_map=None):
     respons_time = time.time()
     if memory is None:
         print("Initialze the memory")
-        tmp_memory = ChatMemoryBuffer.from_defaults(token_limit=50000)
+        tmp_memory = ChatMemoryBuffer.from_defaults(token_limit=TOKEN_LIMIT)
         chat_engine = init_chat_engine(generated_reports_index,All_Prompts["instructions"],tmp_memory,filter_map=the_filter_map)
         del tmp_memory
     else:
@@ -364,7 +397,7 @@ def retrieve_and_generated_comprehensive_report(generated_reports_index,split_by
     respons_time = time.time()
     if memory is None:
         print("Initialze the memory")
-        tmp_memory = ChatMemoryBuffer.from_defaults(token_limit=50000)
+        tmp_memory = ChatMemoryBuffer.from_defaults(token_limit=TOKEN_LIMIT)
         chat_engine = init_chat_engine(generated_reports_index,All_Prompts["instructions"],tmp_memory)
         del tmp_memory
     else:
@@ -383,7 +416,13 @@ def retrieve_and_generated_comprehensive_report(generated_reports_index,split_by
             retrieve_prompt = All_Prompts["retrieve_ioc_comp"]
         ioc_lst = retrieve_IOC_list(chat_engine,retrieve_prompt,filter_hallucination=False)
 
-    IOC_LIST = '"' + '", "'.join(ioc_lst) + '"'
+    if (ioc_lst is None) or (len(ioc_lst) == 0):
+        return None, None, None
+    try:
+        IOC_LIST = '"' + '", "'.join(ioc_lst) + '"'
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None, None, None
     generate_prompt = generate_prompt.replace("{IOC_LIST}",IOC_LIST)
     print("Prompt: ",generate_prompt)
     comprehensive_report = prompt_chat_engine(chat_engine, generate_prompt)
@@ -406,8 +445,12 @@ def index_generated_reports(generated_reports,generated_reports_index=None,repor
 
 
 def prompt_chat_engine(chat_engine,prompt):
-    response = chat_engine.chat(prompt)
-    display_markdown(response.response)
+    try:
+        response = chat_engine.chat(prompt)
+        display_markdown(response.response)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
     return response.response
 
 def retrieve_and_summarize_documents(doc_ids,vector_index,processed_reports,split_by_APT_stages=False,summarize_prompt=All_Prompts["summarize_report"],retrieve_prompt=None,memory=None):
@@ -418,7 +461,7 @@ def retrieve_and_summarize_documents(doc_ids,vector_index,processed_reports,spli
         the_filter_map = MetadataFilters(filters=[MetadataFilter(key="file_name", value=doc_id, operator="==")])
         if memory is None:
             print("Initialze the memory")
-            tmp_memory = ChatMemoryBuffer.from_defaults(token_limit=50000)
+            tmp_memory = ChatMemoryBuffer.from_defaults(token_limit=TOKEN_LIMIT)
             chat_engine = init_chat_engine(vector_index,All_Prompts["instructions"],tmp_memory,filter_map=the_filter_map)
             del tmp_memory
         else:
@@ -438,20 +481,21 @@ def retrieve_and_summarize_documents(doc_ids,vector_index,processed_reports,spli
         IOC_LIST = '"' +'", "'.join(filtered_ioc_lst)+'"'
         this_summarize_prompt = summarize_prompt.replace("{DOC_ID}",doc_id).replace("{IOC_LIST}",IOC_LIST)
         print("Prompt: ",this_summarize_prompt)
-        generated_reports[doc_id] =prompt_chat_engine(chat_engine, this_summarize_prompt)
+        generated_reports[doc_id] = prompt_chat_engine(chat_engine, this_summarize_prompt)
+        if generated_reports[doc_id] is None :
+            del generated_reports[doc_id]
         filtered_ioc_lsts[doc_id] = filtered_ioc_lst
         print("response times is: ", time.time() - respons_time)
-    return generated_reports, filtered_ioc_lsts ,  memory
+    del filtered_ioc_lsts
+    return generated_reports ,  memory
 
 def retrieve_IOC_list(chat_engine,retrieve_prompt,processed_report=None,filter_hallucination=True):
     print("Prompt: ",retrieve_prompt)
     iocs_str = prompt_chat_engine(chat_engine, retrieve_prompt)
+    if iocs_str is None:
+        return []
     iocs_str = iocs_str.strip('```python\n').strip('```')
-    # 2. Safely convert the string to a Python list
-    try:
-        iocs_list = ast.literal_eval(iocs_str)
-    except (SyntaxError, ValueError) as e:
-        print(f"Error converting output to list: {e}")
+    iocs_list = extract_IOC_list(iocs_str)
     if filter_hallucination == False:
         ioc_lst = deepcopy(iocs_list)
     else:
@@ -472,21 +516,45 @@ def detect_and_filter_hallucination(iocs_list,processed_report):
     print("Number of detected hallucinations is: ", n_hallucination)
     return filtered_ioc_lst
 
+def extract_IOC_list(iocs_str):
+    pattern = r'\[.*\]'  # Matches anything between square brackets
+    match = re.search(pattern, iocs_str, re.DOTALL)  # re.DOTALL allows matching across multiple lines
+    if match:
+        # Extract the matched string
+        list_str = match.group(0)
+        # Convert the string to a Python list using eval (use with caution)
+        try:
+            iocs_list = ast.literal_eval(list_str)
+        except (SyntaxError, ValueError) as e:
+            print(f"Error converting output to list: {e}")
+            return []
+    else:
+        print("No list found in the text.")
+        return []
+    return iocs_list
 
 def select_key_ioc(generated_reports, ioc_type="IP", report_of_interest=None, visited_iocs=[]):
     comprehensive_reports_index = index_generated_reports(generated_reports,report_of_interest=report_of_interest)
-    memory = ChatMemoryBuffer.from_defaults(token_limit=50000)
+    memory = ChatMemoryBuffer.from_defaults(token_limit=TOKEN_LIMIT)
     llm_judge = init_chat_engine(comprehensive_reports_index, All_Prompts["judge_instructions"], memory)
 
     ioc = prompt_chat_engine(llm_judge, All_Prompts["key_ioc"].replace("{IOC_TYPE}", ioc_type))
-    ioc = ioc.replace("`", "").lower()
+    iocs_list = extract_IOC_list(ioc)
+    if len(iocs_list) == 0:
+        print("No IOC selected from the document")
+        return None
+    ioc = iocs_list[0].replace("`", "").split("\\")[-1].split("/")[-1].split(" ")[-1].lower()
     attempt=1
     while ioc in visited_iocs:
         if attempt > MAX_IOC_CONTEXT_ATTEMPT:
             return None
         visited_iocs_str = '"' +'", "'.join(visited_iocs)+'"'
         ioc = prompt_chat_engine(llm_judge, All_Prompts["following_key_ioc"].replace("{IOC_TYPE}", ioc_type).replace("{VISITED_IOC}",visited_iocs_str))
-        ioc = ioc.replace("`", "").lower()
+        iocs_list = extract_IOC_list(ioc)
+        if len(iocs_list) == 0:
+            print("No IOC selected from the document")
+            return None
+        ioc = iocs_list[0].replace("`", "").split("\\")[-1].split("/")[-1].split(" ")[-1].lower()
         attempt +=1
     return ioc
 
@@ -522,16 +590,32 @@ def enrich_with_ioc(ioc,ioc_type,processed_reports,generated_reports,last_comp_r
     global vector_index, generated_reports_index
     context_df, context_description_df, context_processed_report, context_doc_id, context_doc = get_context_of_IOC(ioc,IOC_type=ioc_type)
     if context_description_df is None:
-        return None,generated_reports,None,None
+        return None,generated_reports,None
     processed_reports[context_doc_id] = context_processed_report
     vector_index = index_documents([context_doc], vector_index)
-    context_generated_reports, context_filtered_ioc_lsts, memory = retrieve_and_summarize_documents([context_doc_id], vector_index, processed_reports, split_by_APT_stages=True,summarize_prompt=All_Prompts["summarize_report"], retrieve_prompt=All_Prompts["retrieve_ioc_multiStage"])
+    if args.standard_prompt:
+        context_generated_reports, memory =  summarize_documents([context_doc_id], vector_index,summarize_prompt=All_Prompts["standard_summarize_report"])
+    else:
+        context_generated_reports, memory = retrieve_and_summarize_documents([context_doc_id], vector_index, processed_reports, split_by_APT_stages=True,summarize_prompt=All_Prompts["summarize_report"], retrieve_prompt=All_Prompts["retrieve_ioc_multiStage"])
+    if not context_generated_reports:
+        print("No context reports generated by LLM")
+        return None,generated_reports,None
     generated_reports[context_doc_id] = context_generated_reports[context_doc_id]
     generated_reports_index = index_generated_reports(generated_reports,generated_reports_index, context_doc_id)
     the_filter_map = MetadataFilters(filters=[MetadataFilter(key="file_name", value=last_comp_report, operator="=="),MetadataFilter(key="file_name", value=context_doc_id, operator="==")],condition="or")
     comprehensive_report, memory, chat_engine = generate_comprehensive_report(generated_reports_index,prompt=All_Prompts["augment_comp_report"].replace("{COMP}",last_comp_report).replace("{REPORT}",context_doc_id),the_filter_map=the_filter_map)
-    del context_filtered_ioc_lsts,context_df,context_description_df, context_processed_report,context_doc,context_doc_id
-    return comprehensive_report,generated_reports,memory, chat_engine
+    del context_df,context_description_df, context_processed_report,context_doc,context_doc_id
+    return comprehensive_report,generated_reports,memory
+
+def enable_logging(save_logs,level=logging.INFO):
+    ensure_dir(save_logs)
+    logging.basicConfig(
+        filename=save_logs,
+        filemode='a',
+        level=level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Custom log format
+    )
+    return
 
 if __name__ == '__main__':
     start_time = time.time()
@@ -585,11 +669,23 @@ if __name__ == '__main__':
             vector_index, generated_reports_index, memory, generated_reports = load_checkpont(load_path=output_path)
         else:
             vector_index = index_documents(all_documents)
-        generated_reports, filtered_ioc_lsts,  memory =  retrieve_and_summarize_documents(
-            report_names,vector_index,processed_reports,summarize_prompt=All_Prompts["summarize_report"],retrieve_prompt=All_Prompts["retrieve_ioc"])
-        del filtered_ioc_lsts
+        if args.standard_prompt:
+            generated_reports, memory =  summarize_documents(report_names,vector_index,summarize_prompt=All_Prompts["standard_summarize_report"])
+        else:
+            generated_reports, memory =  retrieve_and_summarize_documents(report_names,vector_index,processed_reports,summarize_prompt=All_Prompts["summarize_report"],retrieve_prompt=All_Prompts["retrieve_ioc"])
+        if not generated_reports:
+            print("No reports generated by LLM")
+            print("Total time: ", time.time() - start_time, "seconds.")
+            sys.exit()
         generated_reports_index = index_generated_reports(generated_reports)
-        comprehensive_report, memory, chat_engine = retrieve_and_generated_comprehensive_report(generated_reports_index,split_by_APT_stages=True,generate_prompt=All_Prompts["summarize_comp_report_iocs"],retrieve_prompt=All_Prompts["retrieve_ioc_multiStage_comp"])
+        if args.standard_prompt:
+            comprehensive_report, memory, chat_engine = generate_comprehensive_report(generated_reports_index,prompt=All_Prompts["standard_summarize_comp_report"])
+        else:
+            comprehensive_report, memory, chat_engine = retrieve_and_generated_comprehensive_report(generated_reports_index,split_by_APT_stages=True,generate_prompt=All_Prompts["summarize_comp_report_iocs"],retrieve_prompt=All_Prompts["retrieve_ioc_multiStage_comp"])
+        if comprehensive_report is None:
+            print("Unable to generate comprehensive report")
+            print("Total time: ", time.time() - start_time, "seconds.")
+            sys.exit()
         del all_documents
         comp_report = 0
         visited_iocs = []
@@ -606,17 +702,17 @@ if __name__ == '__main__':
                     break
                 visited_iocs.append(ioc)
                 if ioc_type == "IP":
-                    comprehensive_report,generated_reports,memory, chat_engine = enrich_with_ioc(ioc, "flow",processed_reports,generated_reports,report_of_interest)
+                    comprehensive_report,generated_reports,memory = enrich_with_ioc(ioc, "flow",processed_reports,generated_reports,report_of_interest)
                 else:
                     # comprehensive_report, generated_reports, memory, chat_engine = enrich_with_ioc(ioc, ioc_type,processed_reports,generated_reports,report_of_interest)
                     # #### Get context for process and file ####
-                    comprehensive_report,generated_reports,memory, chat_engine = enrich_with_ioc(ioc, "process",processed_reports,generated_reports,report_of_interest)
+                    comprehensive_report,generated_reports,memory = enrich_with_ioc(ioc, "process",processed_reports,generated_reports,report_of_interest)
                     if comprehensive_report is not None:
                         comp_report += 1
                         report_of_interest = "comprehensive_report_" + str(comp_report)
                         generated_reports[report_of_interest] = comprehensive_report
                         generated_reports_index = index_generated_reports(generated_reports, generated_reports_index,report_of_interest)
-                    comprehensive_report_file,generated_reports,memory, chat_engine = enrich_with_ioc(ioc, "file",processed_reports,generated_reports,report_of_interest)
+                    comprehensive_report_file,generated_reports,memory = enrich_with_ioc(ioc, "file",processed_reports,generated_reports,report_of_interest)
                     if comprehensive_report_file is not None:
                         comprehensive_report = comprehensive_report_file
                 if comprehensive_report is None:
