@@ -215,14 +215,14 @@ execute_OCR_APT () {
   then
     echo "Converting to RDF"
     transfor_to_RDF ${dataset} ${host} ${root_path}
+    echo "load RDFs provenance graphs into the RDF graph engine"
+    read -p "Have you loaded provenance graphs into the database (y/N): " PG_loaded
   fi
   if [[ "$encodePYG" == "y" ]]
   then
     echo "Encoding to PyG"
     encode_to_PYG ${dataset} ${host} ${root_path}
   fi
-  echo "load RDFs provenance graphs into the RDF graph engine"
-  read -p "Have you loaded provenance graphs into the database (y/N): " PG_loaded
   if [[ "$PG_loaded" == "y" ]]
   then
     if [[ "$trainGNN" == "y" ]]
