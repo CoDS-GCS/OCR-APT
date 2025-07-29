@@ -20,12 +20,12 @@ The system consists of multiple Python scripts and other bash scripts that comma
 
 
 ## Setup OCR-APT 
-- Use `/bash_src/create_env.sh` to create a Conda environment from `environment.yml` and `requirements.txt`
-- Setup GraphDB and RDF* create database repositories 
-- Prepare a `config.json` file containing your database repositories URL and your OpenAI API keys.
-- Provide the data snapshots and ground truth label, store them in `/dataset/<DATASET_NAME>/<HOST_NAME>/experiments/.`, and load the RDF datasets into GraphDB. 
-  - (Upon acceptance, we will provide the datasets in RDF format, we couldn't share it anonymously due to its large size)
-- Use `/bash_src/ocrapt-full-system-pipeline.sh` to run the full pipeine.
+1. Run `/bash_src/create_env.sh` to create the Conda environment using `environment.yml` and `requirements.txt`. 
+2. Set up GraphDB with RDF* support and create the necessary database repositories. 
+3. Create a `config.json` file containing the URLs of your database repositories and your OpenAI API keys. 
+4. Provide the data snapshots and ground truth labels. Store them in the following path: /dataset/<DATASET_NAME>/<HOST_NAME>/experiments/. Load the corresponding RDF datasets into GraphDB.
+   - (We will provide the RDF-formatted datasets upon paper acceptance. Due to their size, we cannot share them anonymously at this stage.)
+5. Run the full system pipeline using: `/bash_src/ocrapt-full-system-pipeline.sh`
 
 ## Experiments with locally deployed LLMs
 ### Experiment Summary: 
