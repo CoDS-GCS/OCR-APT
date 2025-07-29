@@ -131,6 +131,7 @@ def splitbyStratifiedNodeTypes(g_tsv_df,this_type_node_idx,entites_dic,labels_re
     print("Number of testing samples", len(test_df))
     return train_df,valid_df,test_df
 
+
 def feature_engineering(graph_df,edge_types):
     all_nodes_uuid = set(graph_df["source-id"].unique().tolist() + graph_df["destination-id"].unique().tolist())
     sorted_edge_types = order_x_features(args.host,edge_types)
@@ -149,30 +150,7 @@ def feature_engineering(graph_df,edge_types):
             edge_time = row[dict_columns['timestamp']]
         x_list[src_uuid][str("out_" + edge_type)] += 1
         x_list[dst_uuid][str("in_" + edge_type)] += 1
-        if args.get_total_active_time:
-            # Get the time first action related to the node
-            if "start_active_time" in x_list[src_uuid].keys():
-                if edge_time < x_list[src_uuid]["start_active_time"]:
-                    x_list[src_uuid]["start_active_time"] = edge_time
-            else:
-                x_list[src_uuid]["start_active_time"] = edge_time
-            if "start_active_time" in x_list[dst_uuid].keys():
-                if edge_time < x_list[dst_uuid]["start_active_time"]:
-                    x_list[dst_uuid]["start_active_time"] = edge_time
-            else:
-                x_list[dst_uuid]["start_active_time"] = edge_time
-            # Git the time of last actions related to the node
-            if "end_active_time" in x_list[src_uuid].keys():
-                if edge_time > x_list[src_uuid]["end_active_time"]:
-                    x_list[src_uuid]["end_active_time"] = edge_time
-            else:
-                x_list[src_uuid]["end_active_time"] = edge_time
-            if "end_active_time" in x_list[dst_uuid].keys():
-                if edge_time > x_list[dst_uuid]["end_active_time"]:
-                    x_list[dst_uuid]["end_active_time"] = edge_time
-            else:
-                x_list[dst_uuid]["end_active_time"] = edge_time
-        if args.get_idle_time:
+        if args.get_timestamps_features:
             if "event_timestamp_lst" in x_list[src_uuid].keys():
                 x_list[src_uuid]["event_timestamp_lst"].append(edge_time)
             else:
@@ -181,43 +159,64 @@ def feature_engineering(graph_df,edge_types):
                 x_list[dst_uuid]["event_timestamp_lst"].append(edge_time)
             else:
                 x_list[dst_uuid]["event_timestamp_lst"] = [edge_time]
-    if args.get_idle_time:
+    if args.get_timestamps_features:
+        second_threshold = 1.00
         for node_uuid in x_list.keys():
-            idle_time_lst = []
             if len(x_list[node_uuid]["event_timestamp_lst"]) > 1:
                 x_list[node_uuid]["event_timestamp_lst"].sort()
+                event_timestamps = pd.Series(x_list[node_uuid]["event_timestamp_lst"])
+                gaps_durations = event_timestamps.diff().dropna()
                 if args.dataset == "optc":
-                    for i in range(len(x_list[node_uuid]["event_timestamp_lst"]) - 1):
-                        idle_time_lst.append((x_list[node_uuid]["event_timestamp_lst"][i + 1] -
-                                              x_list[node_uuid]["event_timestamp_lst"][i]).total_seconds())
-                    x_list[node_uuid]["avg_idle_time"] = int(round(mean(idle_time_lst)))
-                    x_list[node_uuid]["max_idle_time"] = int(round(max(idle_time_lst)))
-                    x_list[node_uuid]["min_idle_time"] = int(round(min(idle_time_lst)))
-                elif args.host in ["SimulatedW10","SimulatedWS12"]:
-                    ## DEBUG: needs to revise the timestamp format ##
-                    x_list[node_uuid]["event_timestamp_lst"].sort()
-                    for i in range(len(x_list[node_uuid]["event_timestamp_lst"]) - 1):
-                        idle_time_lst.append(x_list[node_uuid]["event_timestamp_lst"][i + 1] - x_list[node_uuid]["event_timestamp_lst"][i])
-                    x_list[node_uuid]["avg_idle_time"] = int(round(mean(idle_time_lst)/ 1000))
-                    x_list[node_uuid]["max_idle_time"] = int(round(max(idle_time_lst)/ 1000))
-                    x_list[node_uuid]["min_idle_time"] = int(round(min(idle_time_lst)/ 1000))
+                    gaps_durations_sec = gaps_durations.dt.total_seconds()
+                elif args.host in ["SimulatedW10", "SimulatedWS12"]:
+                    gaps_durations_sec = gaps_durations / 1000
                 else:
-                    ### DEBUG: Should I sort the timestamps list here as well ####
-                    for i in range(len(x_list[node_uuid]["event_timestamp_lst"]) - 1):
-                        idle_time_lst.append(
-                            x_list[node_uuid]["event_timestamp_lst"][i + 1] - x_list[node_uuid]["event_timestamp_lst"][i])
-                    x_list[node_uuid]["avg_idle_time"] = int(round(mean(idle_time_lst) / 1000000000))
-                    x_list[node_uuid]["max_idle_time"] = int(round(max(idle_time_lst) / 1000000000))
-                    x_list[node_uuid]["min_idle_time"] = int(round(min(idle_time_lst) / 1000000000))
-            del idle_time_lst
+                    gaps_durations_sec = gaps_durations / 1000000000
+                if args.get_cumulative_active_time:
+                    active_durations = gaps_durations_sec[gaps_durations_sec < second_threshold]
+                    idle_durations = gaps_durations_sec[gaps_durations_sec >= second_threshold]
+                else:
+                    idle_durations = gaps_durations_sec
+                if args.get_idle_time:
+                    if len(idle_durations) > 0:
+                        x_list[node_uuid]["avg_idle_time"] = int(round(idle_durations.mean()))
+                        x_list[node_uuid]["max_idle_time"] = int(round(idle_durations.max()))
+                        x_list[node_uuid]["min_idle_time"] = int(round(idle_durations.min()))
+                    else:
+                        x_list[node_uuid]["avg_idle_time"] = 0
+                        x_list[node_uuid]["max_idle_time"] = 0
+                        x_list[node_uuid]["min_idle_time"] = 0
+                if args.get_cumulative_active_time:
+                    if len(active_durations) > 0:
+                        x_list[node_uuid]["cumulative_active_time"] = int(round(active_durations.sum()))
+                    else:
+                        x_list[node_uuid]["cumulative_active_time"] = 0
+                if args.get_lifespan:
+                    x_list[node_uuid]["lifespan"] = int(round(gaps_durations_sec.sum()))
+            else:
+                if args.get_idle_time:
+                    x_list[node_uuid]["avg_idle_time"] = 0
+                    x_list[node_uuid]["max_idle_time"] = 0
+                    x_list[node_uuid]["min_idle_time"] = 0
+                if args.get_cumulative_active_time:
+                    x_list[node_uuid]["cumulative_active_time"] = 0
+                if args.get_lifespan:
+                    x_list[node_uuid]["lifespan"] = 0
             del x_list[node_uuid]['event_timestamp_lst']
     x_list_df = pd.DataFrame.from_dict(x_list, orient='index')
+    # # removes all columns in x_list_df that are entirely zeros. Not necessary to keep
     x_list_df = x_list_df.loc[:, (x_list_df != 0).any(axis=0)]
     del x_list
 
     if args.timestamps_in_minutes:
+        timeFeatures_to_scale = []
         if args.get_idle_time:
-            timeFeatures_to_scale = ["max_idle_time", "min_idle_time", "avg_idle_time"]
+            timeFeatures_to_scale.extend(["max_idle_time", "min_idle_time", "avg_idle_time"])
+        if args.get_cumulative_active_time:
+            timeFeatures_to_scale.append("cumulative_active_time")
+        if args.get_lifespan:
+            timeFeatures_to_scale.append("lifespan")
+        if len(timeFeatures_to_scale) > 0:
             x_list_df[timeFeatures_to_scale] = x_list_df[timeFeatures_to_scale] / 60
     x_list_df = x_list_df.reset_index()
     x_list_df.rename(columns={'index': 'node_uuid'}, inplace=True)
@@ -233,15 +232,16 @@ def feature_engineering(graph_df,edge_types):
         timestamp_features = [column for column in x_list_df.columns if (column not in sorted_edge_types) and (column !="node_uuid")]
 
         normalized_x_list_df = x_list_df[["node_uuid"]]
+
         # Normalize L2 Unit vector normalization (L2) for actions , and MinMax
         normalized_data = normalize(x_list_df[sorted_edge_types], norm='l2', axis=1)
-        columns_to_normalize_row = ["norm_" + edge for edge in sorted_edge_types]
-        normalized_x_list_df[columns_to_normalize_row] = pd.DataFrame(normalized_data, columns=columns_to_normalize_row)
-        if args.get_idle_time:
+        normalized_x_list_df[sorted_edge_types] = pd.DataFrame(normalized_data, columns=sorted_edge_types)
+        if args.get_idle_time or args.get_cumulative_active_time or args.get_lifespan:
             scaler = MinMaxScaler()
             normalized_x_list_df[timestamp_features] = pd.DataFrame(scaler.fit_transform(x_list_df[timestamp_features]), columns=timestamp_features)
         del x_list_df
         x_list_df = normalized_x_list_df
+
 
     print("Total Number of features:", len(x_list_df.columns) - 1)
     print("Extracted features:", x_list_df.columns)

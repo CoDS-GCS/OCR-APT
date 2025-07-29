@@ -39,7 +39,7 @@ then
     read -p "Enter the size of hidden layer (32): " HiddenLayer
   fi
   read -p "Enter the number of layers (2): " n_layers
-  read -p "Enter the learning rate (0.004): " learningRate
+  read -p "Enter the learning rate (0.005): " learningRate
   read -p "Enter Beta (0.5): " Beta
   read -p "Do you want to train with dynamic contamination (Y/n): " dynamicContamination
   if [[ "$dynamicContamination" == "n" ]]
@@ -68,12 +68,7 @@ then
   then
     rdf_parameter+=" --rdfs"
   fi
-  read -p "Do you want to adjust UUID to avoid node duplication (y/N): " adjustUUID
-  if [[ "$adjustUUID" == "y" ]]
-  then
-    rdf_parameter+=" --adjust-uuid"
-  fi
-  read -p "Enter the minimum nodes per node type (default: 10): ": min_node_type
+  read -p "Enter the minimum nodes per node type (default: 5): ": min_node_type
   rdf_parameter+=" --min-node-representation ${min_node_type}"
   if [[ "$dataset" == "optc" ]]
   then
@@ -89,11 +84,6 @@ fi
 
 if [[ "$preprocess" == "y" ]]
 then
-  read -p "Do you want to take validation from training set (y/N): ": TrainingValid
-  if [[ "$TrainingValid" == "y" ]]
-  then
-    pyg_parameters+=" --training-valid"
-  fi
   read -p "Do you want to extract features from timestamps (y/N): ": timestamps_features
   if [[ "$timestamps_features" == "y" ]]
   then
@@ -102,6 +92,16 @@ then
     if [[ "$IdleTime" == "y" ]]
     then
       pyg_parameters+=" --get-idle-time"
+    fi
+    read -p "Do you want to extract Lifespan as feature (y/N): " LifeSpan
+    if [[ "$LifeSpan" == "y" ]]
+    then
+      pyg_parameters+=" --get-lifespan"
+    fi
+    read -p "Do you want to extract Cumulative active time as feature (y/N): " activetime
+    if [[ "$activetime" == "y" ]]
+    then
+      pyg_parameters+=" --get-cumulative-active-time"
     fi
   fi
   read -p "Do you want to normalize features (y/N): ": Normalize
@@ -188,7 +188,7 @@ execute_OCR_APT () {
   nx_source_graph="complete_${host}_pg"
   if [[ "$ToRDF" == "y" ]]
   then
-    python -B -u ../src/transform_to_RDF.py --dataset ${dataset} --host ${host} --root-path ${root_path} --source-graph ${source_graph} ${rdf_parameter} >> ../logs/${host}/${exp_name}/DARPA_to_RDF_${date}.txt
+    python -B -u ../src/transform_to_RDF.py --dataset ${dataset} --host ${host} --adjust-uuid --root-path ${root_path} --source-graph ${source_graph} ${rdf_parameter} >> ../logs/${host}/${exp_name}/DARPA_to_RDF_${date}.txt
     if [[ "$node_attrs_graph_nx" == "y" ]]
     then
       if [[ "$adjustUUID" == "y" ]]
