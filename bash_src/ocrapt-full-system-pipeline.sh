@@ -217,6 +217,8 @@ execute_OCR_APT () {
     transfor_to_RDF ${dataset} ${host} ${root_path}
     echo "load RDFs provenance graphs into the RDF graph engine"
     read -p "Have you loaded provenance graphs into the database (y/N): " PG_loaded
+  else
+    PG_loaded="y"
   fi
   if [[ "$encodePYG" == "y" ]]
   then
