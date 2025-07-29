@@ -631,13 +631,13 @@ if __name__ == '__main__':
         stats_report_path = args.root_path + "results/" + args.exp_name + "/" + args.GNN_model_name.replace(".model","") + "/run"+str(run)+"_" + args.inv_exp_name + "_correlated_subgraphs_statistics.csv"
         inv_reports_path = args.root_path + "investigation/" + args.exp_name + "/" + args.GNN_model_name.replace(".model","") +"/run"+str(run)+"_" + args.inv_exp_name
         subgraphs_stats_df = pd.read_csv(stats_report_path)
-        ioc_f = args.root_path + "query_graphs_IOCs.json"
+        ioc_f = args.root_path + "groundTruth_IOCs.json"
         with open(ioc_f) as f:
-            query_graphs_IOCs = json.load(f)
-        query_graphs_IOCs_set = set()
-        for attack, iocs in query_graphs_IOCs.items():
-            query_graphs_IOCs_set.update(iocs["file"])
-            query_graphs_IOCs_set.update(iocs["ip"])
+            groundTruth_IOCs = json.load(f)
+        groundTruth_IOCs_set = set()
+        for attack, iocs in groundTruth_IOCs.items():
+            groundTruth_IOCs_set.update(iocs["file"])
+            groundTruth_IOCs_set.update(iocs["ip"])
         abnormality_order = ['Negligible', 'Minor', 'Moderate', 'Significant', 'Critical']
         abnormality_level_lst = abnormality_order[abnormality_order.index(args.abnormality_level):]
         subgraphs_in_interest_IDs = subgraphs_stats_df[subgraphs_stats_df['severity_level'].isin(abnormality_level_lst)][

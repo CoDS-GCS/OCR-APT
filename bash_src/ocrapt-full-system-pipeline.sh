@@ -240,6 +240,8 @@ execute_OCR_APT () {
       echo "Generate attack reprots"
       generate_llm_investigator_reports ${host} ${load_model} ${load_index} ${embed_model} ${anomalous} ${abnormality} ${root_path}
     fi
+  else
+    echo "loaded provenance graphs into the database and run again"
   fi
   sleep 1m
 }
