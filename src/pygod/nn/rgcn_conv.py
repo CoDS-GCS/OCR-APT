@@ -111,6 +111,7 @@ class RGCNConv(MessagePassing):
         root_weight: bool = True,
         is_sorted: bool = False,
         bias: bool = True,
+        visualize=False,
         **kwargs,
     ):
         kwargs.setdefault('aggr', aggr)
