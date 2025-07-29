@@ -23,7 +23,8 @@ The system consists of multiple Python scripts and other bash scripts that comma
 - Use `/bash_src/create_env.sh` to create a Conda environment from `environment.yml` and `requirements.txt`
 - Setup GraphDB and RDF* create database repositories 
 - Prepare a `config.json` file containing your database repositories URL and your OpenAI API keys.
-- Provide the data snapshots and ground truth label, store them in `/dataset/<DATASET_NAME>/<HOST_NAME>/experiments/.`, and load the RDF datasets into GraphDB (Upon acceptance, we will provide the datasets in RDF* format, we couldn't share it anonymously due to its large size)
+- Provide the data snapshots and ground truth label, store them in `/dataset/<DATASET_NAME>/<HOST_NAME>/experiments/.`, and load the RDF datasets into GraphDB. 
+  - (Upon acceptance, we will provide the datasets in RDF format, we couldn't share it anonymously due to its large size)
 - Use `/bash_src/ocrapt-full-system-pipeline.sh` to run the full pipeine.
 
 ## Experiments with locally deployed LLMs
