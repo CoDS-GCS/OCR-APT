@@ -86,14 +86,15 @@ transfor_to_RDF () {
   host=$2
   root_path=$3
   source_graph=${host}
-  python -B -u ../src/transform_to_RDF.py --dataset ${dataset} --host ${host} --root-path ${root_path} --source-graph ${source_graph} ${rdf_parameter} >> ../logs/${host}/${exp_name}/Transform_to_RDF_${date}.txt
+
   if [[ "$dataset" == "tc3" ]]
   then
     read -p "Do you want to get node attributes from NetworkX graph(y/N): ": node_attrs_graph_nx
-    if [[ "$node_attrs_graph_nx" == "y" ]]
-    then
-      python -B -u ../src/get_node_attributes.py --adjust-uuid --host ${host} --root-path ${root_path} --source-graph ${source_graph} --source-graph-nx ${nx_source_graph} >> ../logs/${host}/${exp_name}/Transform_to_RDF_${date}.txt
-    fi
+  fi
+  python -B -u ../src/transform_to_RDF.py --dataset ${dataset} --host ${host} --root-path ${root_path} --source-graph ${source_graph} ${rdf_parameter} >> ../logs/${host}/${exp_name}/Transform_to_RDF_${date}.txt
+  if [[ "$node_attrs_graph_nx" == "y" ]]
+  then
+    python -B -u ../src/get_node_attributes.py --adjust-uuid --host ${host} --root-path ${root_path} --source-graph ${source_graph} --source-graph-nx ${nx_source_graph} >> ../logs/${host}/${exp_name}/Transform_to_RDF_${date}.txt
   fi
   echo "Done converting to RDF"
 }
@@ -140,6 +141,7 @@ train_GNN_models () {
   else
     echo "The model already trained before"
   fi
+  load_model=${save_path}
 }
 
 Detect_Anomolous_Nodes () {

@@ -18,6 +18,14 @@ The system consists of multiple Python scripts and other bash scripts that comma
 ## OCR-APT system Architecture 
 ![System Architecture](OCR-APT-system.png)
 
+
+## Setup OCR-APT 
+- Use `/bash_src/create_env.sh` to create a Conda environment from `environment.yml` and `requirements.txt`
+- Setup GraphDB and RDF* create database repositories 
+- Prepare a `config.json` file containing your database repositories URL and your OpenAI API keys.
+- Provide the data snapshots and ground truth label and store them in `/dataset/<DATASET_NAME>/<HOST_NAME>/experiments/.`
+- Use `/bash_src/ocrapt-full-system-pipeline.sh` to run the full pipeine.
+
 ## Experiments with locally deployed LLMs
 ### Experiment Summary: 
 We evaluated OCR-APT using locally deployed LLMs and compared its generated reports with those produced by ChatGPT.  
