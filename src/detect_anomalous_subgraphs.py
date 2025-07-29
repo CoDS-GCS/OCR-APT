@@ -1051,15 +1051,15 @@ def investigate_subgraphs(subgraphs,cluster=None):
     return
 
 def label_query_graph_ioc(subgraph):
-    global query_graphs_IOCs, query_graphs_IOCs_set
+    global groundTruth_IOCs, groundTruth_IOCs_set
     allNodes_dic = dict(subgraph.nodes.data())
     covered_ioc = {}
     if args.dataset == "nodlink":
         sg_Nodes_df = pd.DataFrame.from_dict(allNodes_dic, orient='index').reset_index()
         sg_Nodes_df.columns = ['node', 'node_type', 'node_attr']
         sg_Nodes_df = sg_Nodes_df.dropna(subset=['node_attr'])
-        for attack, attack_IOC in query_graphs_IOCs.items():
-            if len(query_graphs_IOCs_set)==0:break
+        for attack, attack_IOC in groundTruth_IOCs.items():
+            if len(groundTruth_IOCs_set)==0:break
             for ip_ioc in attack_IOC["ip"]:
                 nodes_matched_iocs = sg_Nodes_df[sg_Nodes_df["node_attr"].str.contains(ip_ioc)]
                 covered_ioc_tmp = set(nodes_matched_iocs["node_attr"])
@@ -1096,8 +1096,8 @@ def label_query_graph_ioc(subgraph):
     else:
         for node_uuid, node_dic in allNodes_dic.items():
             if node_dic["node_attr"] is not None:
-                for attack, attack_IOC in query_graphs_IOCs.items():
-                    if len(query_graphs_IOCs_set) == 0: break
+                for attack, attack_IOC in groundTruth_IOCs.items():
+                    if len(groundTruth_IOCs_set) == 0: break
                     if node_dic["node_type"].lower() in ["flow","netflowobject","net"]:
                         if args.dataset == "optc":
                             token_attr = node_dic["node_attr"].split(" ")[0]
@@ -1135,7 +1135,7 @@ def label_query_graph_ioc(subgraph):
         for attack,iocs in covered_ioc.items():
             covered_ioc_all_attacks.update(iocs)
             print("The covered IOCS of attack", attack, "are:", iocs)
-            covered_percentage = round(len(iocs) / (len(query_graphs_IOCs[attack]["ip"]) + len(query_graphs_IOCs[attack]["file"])), 3)
+            covered_percentage = round(len(iocs) / (len(groundTruth_IOCs[attack]["ip"]) + len(groundTruth_IOCs[attack]["file"])), 3)
             print("The Subgraph has", covered_percentage, "percent of ",attack," Query Graph IOCs")
     else:
         print("The subgraph doesn't cover any attack IOCs")
@@ -1208,11 +1208,11 @@ def rename_path_with_param(out_path):
     return out_path
 
 def get_covered_ioc_nodes_df_IOCS(nodes_attrs_df):
-    global query_graphs_IOCs, query_graphs_IOCs_set
+    global groundTruth_IOCs, groundTruth_IOCs_set
     covered_ioc = {}
     if args.dataset == "nodlink":
-        for attack, attack_IOC in query_graphs_IOCs.items():
-            if len(query_graphs_IOCs_set) == 0: break
+        for attack, attack_IOC in groundTruth_IOCs.items():
+            if len(groundTruth_IOCs_set) == 0: break
             for ip_ioc in attack_IOC["ip"]:
                 covered_ioc_tmp = set(nodes_attrs_df[nodes_attrs_df["node_attr"].str.contains(ip_ioc)]["node_attr"])
                 if len(covered_ioc_tmp) == 0: continue
@@ -1232,7 +1232,7 @@ def get_covered_ioc_nodes_df_IOCS(nodes_attrs_df):
     else:
         if args.dataset == "optc":
             nodes_attrs_df["node_attr"].apply(lambda x: x.split(" ")[0].split("\\")[-1])
-        for attack, attack_IOC in query_graphs_IOCs.items():
+        for attack, attack_IOC in groundTruth_IOCs.items():
             if args.dataset == "optc":
                 covered_ioc[attack] = {node_attr for node_attr in
                                    nodes_attrs_df[nodes_attrs_df["node_type"].isin(["flow", "netflowobject","net"])]["node_attr"]
@@ -1321,14 +1321,14 @@ if __name__ == '__main__':
     start_time = time.time()
     seed = 360
     anomaly_results_df = pd.DataFrame()
-    global query_graphs_IOCs, query_graphs_IOCs_set
-    ioc_f = args.root_path + "query_graphs_IOCs.json"
+    global groundTruth_IOCs, groundTruth_IOCs_set
+    ioc_f = args.root_path + "groundTruth_IOCs.json"
     with open(ioc_f) as f:
-        query_graphs_IOCs = json.load(f)
-    query_graphs_IOCs_set = set()
-    for attack, iocs in query_graphs_IOCs.items():
-        query_graphs_IOCs_set.update(iocs["file"])
-        query_graphs_IOCs_set.update(iocs["ip"])
+        groundTruth_IOCs = json.load(f)
+    groundTruth_IOCs_set = set()
+    for attack, iocs in groundTruth_IOCs.items():
+        groundTruth_IOCs_set.update(iocs["file"])
+        groundTruth_IOCs_set.update(iocs["ip"])
 
     global max_edges
     max_edges = args.max_edges
