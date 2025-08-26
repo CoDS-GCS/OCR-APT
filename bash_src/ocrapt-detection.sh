@@ -67,6 +67,7 @@ Detect_Anomolous_Nodes () {
   logs+="_${date}.txt"
   echo "Parameters are: ${parameters}"
   echo "load from: ${load_model}"
+  mkdir -p ../logs/${host}/${exp_name}
   python -B -u ../src/train_gnn_models.py --host ${host} --dataset ${dataset} --root-path ${root_path} --exp-name ${exp_name} --detector ${detector} ${parameters} --load-model ${load_model}  >> ../logs/${host}/${exp_name}/${logs}
 }
 
@@ -81,6 +82,7 @@ Detect_Anomolous_Subgraph () {
   abnormality=$8
   investigation_parameters=" --min-nodes 3 --max-edges ${max_edges} --number-of-hops ${n_hop} --runs ${runs} --remove-duplicated-subgraph --get-node-attrs --expand-2-hop no --correlate-anomalous-once --top-k ${top_k} --abnormality-level ${abnormality}"
   logs_name="expand_${n_hop}_hop_MaxEdges${max_edges}_K${top_k}_ly${n_layers}"
+  mkdir -p ../logs/${host}/${exp_name}
   python -B -u ../src/detect_anomalous_subgraphs.py --host ${host} --dataset ${dataset} --root-path ${root_path} --exp-name ${exp_name} --model ${model_path}  --construct-from-anomaly-subgraph  ${investigation_parameters}  --inv-exp-name ${logs_name} ${more_param} >> ../logs/${host}/${exp_name}/DetectAnomalousSubgraphs_${logs_name}_${date}.txt
 }
 
@@ -98,6 +100,7 @@ generate_llm_investigator_reports () {
   then
     parameters+=" --load-index"
   fi
+  mkdir -p ../logs/${host}/${exp_name}
   python -B -u ../src/ocrapt_llm_investigator.py --host ${host} --dataset ${dataset} --root-path ${root_path} --exp-name ${exp_name} --GNN-model-name ${load_model} --inv-exp-name ${inv_logs_name} --llm-embedding-model ${embed_model} --abnormality-level ${abnormality} --anomalous ${anomalous} ${parameters} >> ../logs/${host}/${exp_name}/llm_investigator_${llm_exp_name}_${date}.txt
 }
 
