@@ -5,13 +5,12 @@ This is the repository of the submitted paper: **OCR-APT: Reconstructing APT Sto
 
 ## Repository Roadmap
 The input to the system is audit logs in a CSV format.
-The system consists of multiple Python scripts and other bash scripts that command them in an interactive way.
+The system consists of multiple Python scripts and bash scripts that command them in an interactive way.
 - `/src` directory holds all Python scripts.
   - `/src/sparql_queries.py` all SPARQL queries used to construct subgraphs from the `GraphDB` database 
   - `/src/llm_prompt.py` all prompts used by the LLM-based attack investigator  
 - `/bash_src` directory holds all bash scripts.
 - `/recovered_reports` directory contains all recovered reports in our experiments.
-- `/groundtruth` directory contains the ground truth labels, each file contains the malicious nodes' UUID in a specific dataset/host. It should be moved to the dataset directory to reproduce the results.
 - `/logs` directory is the default location for all generated system logs.
 - `/dataset` directory is the default location for training and testing audit logs, ground truth labels, experiments checkpoints, trained GNN models and results. Results include detected anomalous nodes and subgraphs, and recovered attack reports.
 
@@ -21,11 +20,17 @@ The system consists of multiple Python scripts and other bash scripts that comma
 
 ## Setup OCR-APT 
 1. Run `/bash_src/create_env.sh` to create the Conda environment using `environment.yml` and `requirements.txt`. 
-2. Set up GraphDB with RDF* support and create the necessary database repositories. 
+2. Set up GraphDB with RDF* support and create the necessary database repositories.
+    - Follow this [link](https://graphdb.ontotext.com/documentation/11.0/graphdb-desktop-installation.html) to Download and install GraphDB 
+    - Add the following configuration `graphdb.workbench.importDirectory = <PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/` and `graphdb.connector.maxHttpHeaderSize = 1000000`.
+    - Follow this [link](https://graphdb.ontotext.com/documentation/11.0/creating-a-repository.html) to create a repository for each dataset. Select the RDFS-Plus (Optimized) ruleset.  
+    - get the RDF datasets from this [link](), Uncompress, and move them to `<PATH_TO_GraphDB_INSTANCE>/GraphDB/.`.
+    - Follow this [link](https://graphdb.ontotext.com/documentation/11.0/loading-data-using-the-workbench.html) to load datasets into their corresponding repositories, use (Importing server files) option. 
 3. Create a `config.json` file containing the URLs of your database repositories and your OpenAI API keys. 
-4. Provide the data snapshots and ground truth labels. Store them in the following path: /dataset/<DATASET_NAME>/<HOST_NAME>/experiments/. Load the corresponding RDF datasets into GraphDB.
-   - (We will provide the RDF-formatted datasets upon paper acceptance. Due to their size, we cannot share them anonymously at this stage.)
-5. Run the full system pipeline using: `/bash_src/ocrapt-full-system-pipeline.sh`
+4. Get the data snapshots, ground truth labels, and trained models from this [link](). Uncompress and move the `dataset` directory to OCR-APT working directory.
+5. Run the full system pipeline using this bash script: [ocrapt-full-system-pipeline.sh](bash_src/ocrapt-full-system-pipeline.sh)
+   - You can skip the transformation to RDF step, as RDF processed files are released.
+   - To directly test the detection pipeline using our trained models, you can use this bash script: [ocrapt-detection.sh](bash_src/ocrapt-detection.sh).
 
 ## Experiments with locally deployed LLMs
 ### Experiment Summary: 

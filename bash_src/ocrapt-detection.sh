@@ -11,7 +11,13 @@ read -p "Enter the number of runs: " runs
 read -p "Do you want to detect anomalous subgraphs uisng GNN? (y/N): " detectSubgraphs
 if [[ "$detectSubgraphs" == "y" ]]
 then
-  read -p "Enter the GNN model name: " load_model
+  read -p "Do you want to use the defaults trained GNN models? (Y/n): " useDefaultModels
+  if [[ "$useDefaultModels" == "n" ]]
+  then
+    read -p "Enter the GNN model name: " load_model
+  else
+    load_model="OCRGCN_Dr0_ly3_bs0_ep100_beta0.5_LR0.005_Hly32_dynConVal0.001To0.05.model"
+  fi
 fi
 
 read -p "Do you want to generate attack report using LLMs ?(y/N): " generateReports
