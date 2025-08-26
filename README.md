@@ -1,41 +1,115 @@
 # OCR-APT
-OCR-APT is an APT detection system capable of identifying anomalous nodes and subgraphs, performing alerts triage based on abnormality levels, and recovering attack stories to support comprehensive attack investigation.
-OCR-APT employs GNN-based subgraph anomaly detection to identify suspicious activities and utilizes LLMs to generate human-like attack reports.  
-This is the repository of the submitted paper: **OCR-APT: Reconstructing APT Stories through Subgraph Anomaly Detection and LLMs.**
+
+**OCR-APT** is an APT detection system designed to identify anomalous nodes and subgraphs, prioritize alerts based on abnormality levels, and reconstruct attack stories to support comprehensive investigations.  
+
+The system leverages **GNN-based subgraph anomaly detection** to uncover suspicious activities and **LLM-based reporting** to generate human-like attack narratives.  
+
+This is the code for the paper **OCR-APT: Reconstructing APT Stories through Subgraph Anomaly Detection and LLMs**, accepted to ACM CCS2025
+
+---
 
 ## Repository Roadmap
-The input to the system is audit logs in a CSV format.
-The system consists of multiple Python scripts and bash scripts that command them in an interactive way.
-- `/src` directory holds all Python scripts.
-  - `/src/sparql_queries.py` all SPARQL queries used to construct subgraphs from the `GraphDB` database 
-  - `/src/llm_prompt.py` all prompts used by the LLM-based attack investigator  
-- `/bash_src` directory holds all bash scripts.
-- `/recovered_reports` directory contains all recovered reports in our experiments.
-- `/logs` directory is the default location for all generated system logs.
-- `/dataset` directory is the default location for training and testing audit logs, ground truth labels, experiments checkpoints, trained GNN models and results. Results include detected anomalous nodes and subgraphs, and recovered attack reports.
 
-## OCR-APT system Architecture 
+The input to OCR-APT is audit logs in CSV format.  
+The system consists of multiple Python and Bash scripts that work together interactively.  
+
+- **`/src`** – Python scripts:
+  - **`sparql_queries.py`** – SPARQL queries for constructing subgraphs from the GraphDB database.  
+  - **`llm_prompt.py`** – Prompts used by the LLM-based attack investigator.  
+- **`/bash_src`** – Bash scripts for managing the pipeline.  
+- **`/recovered_reports`** – Recovered reports generated in our experiments.  
+- **`/logs`** – Default directory for generated system logs.  
+- **`/dataset`** – Contains training/testing audit logs, ground truth labels, experiment checkpoints, trained GNN models, and results (including anomalous nodes, subgraphs, and recovered reports).  
+
+---
+
+## System Architecture
+
 ![System Architecture](OCR-APT-system.png)
 
+---
 
-## Setup OCR-APT 
-1. Run `/bash_src/create_env.sh` to create the Conda environment using `environment.yml` and `requirements.txt`. 
-2. Set up GraphDB with RDF* support and create the necessary database repositories.
-    - Follow this [link](https://graphdb.ontotext.com/documentation/11.0/graphdb-desktop-installation.html) to Download and install GraphDB 
-    - Add the following configuration `graphdb.workbench.importDirectory = <PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/` and `graphdb.connector.maxHttpHeaderSize = 1000000`.
-    - Follow this [link](https://graphdb.ontotext.com/documentation/11.0/creating-a-repository.html) to create a repository for each dataset. Select the RDFS-Plus (Optimized) ruleset.  
-    - get the RDF datasets from this [link](), Uncompress, and move them to `<PATH_TO_GraphDB_INSTANCE>/GraphDB/.`.
-    - Follow this [link](https://graphdb.ontotext.com/documentation/11.0/loading-data-using-the-workbench.html) to load datasets into their corresponding repositories, use (Importing server files) option. 
-3. Create a `config.json` file containing the URLs of your database repositories and your OpenAI API keys. 
-4. Get the data snapshots, ground truth labels, and trained models from this [link](). Uncompress and move the `dataset` directory to OCR-APT working directory.
-5. Run the full system pipeline using this bash script: [ocrapt-full-system-pipeline.sh](bash_src/ocrapt-full-system-pipeline.sh)
-   - You can skip the transformation to RDF step, as RDF processed files are released.
-   - To directly test the detection pipeline using our trained models, you can use this bash script: [ocrapt-detection.sh](bash_src/ocrapt-detection.sh).
+## Setup OCR-APT
 
-## Experiments with locally deployed LLMs
-### Experiment Summary: 
-We evaluated OCR-APT using locally deployed LLMs and compared its generated reports with those produced by ChatGPT.  
-Specifically, we deployed **LLAMA3 (8B parameters)** on a machine with 4 CPU cores, an 8GB GPU, and 22GB of RAM. To optimize performance, we experimented with different local embedding models, analyzing their outputs to determine the most effective one.  
-Our findings show that **LLAMA3, when paired with the best-performing embedding model, produced reports of comparable quality to ChatGPT**.  
+1. **Create the Conda environment**  
+   Run the following script to create the environment using `environment.yml` and `requirements.txt`:  
+   ```bash
+   bash /bash_src/create_env.sh
+   ```
 
-Experimental results are available in this [spreadsheet](Experiments_with_locally_deployed_LLMs.xlsx).  
+2. **Set up GraphDB with RDF-Star**  
+   - [Download and install GraphDB](https://graphdb.ontotext.com/documentation/11.0/graphdb-desktop-installation.html).  
+   - Add the following configuration:  
+     ```
+     graphdb.workbench.importDirectory = <PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/
+     graphdb.connector.maxHttpHeaderSize = 1000000
+     ```
+   - [Create a repository](https://graphdb.ontotext.com/documentation/11.0/creating-a-repository.html) for each dataset and select the **RDFS-Plus (Optimized)** ruleset.  
+   - Download RDF datasets from [this link]() (placeholder), extract them, and move them to:  
+     ```
+     <PATH_TO_GraphDB_INSTANCE>/GraphDB/.
+     ```
+   - [Load datasets](https://graphdb.ontotext.com/documentation/11.0/loading-data-using-the-workbench.html) into their repositories using the *Importing server files* option.  
+
+3. **Configure system settings**  
+   Create a `config.json` file with your repository URLs and OpenAI API key:  
+   ```json
+   {
+     "repository_url_tc3": "<TC3_URL>",
+     "repository_url_optc": "<OPTC_URL>",
+     "repository_url_nodlink": "<NODLINK_URL>",
+     "openai_api_key": "<API_KEY>"
+   }
+   ```
+
+4. **Prepare datasets and models**  
+   Download data snapshots, ground truth labels, and trained models from [this link]() (placeholder).  
+   Extract them and move the `dataset` directory into the OCR-APT working directory.  
+
+5. **Run the detection pipeline**  
+   - Run detection with pre-trained models:  
+     ```bash
+     bash /bash_src/ocrapt-detection.sh
+     ```
+   - Run the full system pipeline (preprocessing + retraining + detection):  
+     ```bash
+     bash /bash_src/ocrapt-full-system-pipeline.sh
+     ```
+   > **Note:** Preprocessed files are already available [here]() (placeholder), so preprocessing can be skipped if desired.  
+
+---
+
+## Experiments with Locally Deployed LLMs
+
+### Experiment Summary
+We evaluated OCR-APT using **locally deployed LLMs** and compared the generated reports with those produced by ChatGPT.  
+
+- Deployment: **LLAMA3 (8B parameters)** on a machine with:
+  - 4 CPU cores  
+  - 8 GB GPU  
+  - 22 GB RAM  
+- Optimization: Tested multiple local embedding models and analyzed outputs to determine the most effective setup.  
+
+**Key finding:** LLAMA3, combined with the best-performing embedding model, generated reports **comparable in quality to ChatGPT**.  
+
+Detailed experimental results are available in this [spreadsheet](Experiments_with_locally_deployed_LLMs.xlsx).  
+
+[//]: # (## Citation )
+
+[//]: # (### Bibtex)
+
+[//]: # (```)
+
+[//]: # (@article{aly2025ocr,)
+
+[//]: # (  title={{OCR-APT}: Reconstructing APT Stories through Subgraph Anomaly Detection and LLMs},)
+
+[//]: # (  author={Aly, Ahmed and Mansour, Essam and Youssef, Amr },)
+
+[//]: # (  booktitle={Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security},)
+
+[//]: # (  year={2025})
+
+[//]: # (})
+
+[//]: # (```)
