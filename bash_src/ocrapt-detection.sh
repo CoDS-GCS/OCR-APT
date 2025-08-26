@@ -102,7 +102,7 @@ generate_llm_investigator_reports () {
   abnormality=$6
   root_path=$7
   parameters=" --llm-exp-name ${llm_exp_name}"
-  inv_logs_name="expand_${n_hop}_hop_MaxEdges${max_edges}_K${top_k}"
+  inv_logs_name="expand_${n_hop}_hop_MaxEdges${max_edges}_K${top_k}_ly${n_layers}"
   if [[ "$load_index" == "y" ]]
   then
     parameters+=" --load-index"
