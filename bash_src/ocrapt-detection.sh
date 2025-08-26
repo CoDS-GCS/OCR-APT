@@ -23,12 +23,19 @@ fi
 read -p "Do you want to generate attack report using LLMs ?(y/N): " generateReports
 if [[ "$generateReports" == "y" ]]
 then
-  read -p "Enter the LLM investigation experiment name (output): " llm_exp_name
   if [[ "$detectSubgraphs" != "y" ]]
   then
+    read -p "Do you want to use the defaults trained GNN models? (Y/n): " useDefaultModels
+    if [[ "$useDefaultModels" == "n" ]]
+    then
+      read -p "Enter the GNN model name: " load_model
+    else
+      load_model="OCRGCN_Dr0_ly3_bs0_ep100_beta0.5_LR0.005_Hly32_dynConVal0.001To0.05.model"
+    fi
     read -p "Enter the experiment name for anomalous subgraphs: " inv_logs_name
     read -p "Do you want to load previously indexed subgraphs (y/N): " load_index
   fi
+  read -p "Enter the LLM investigation experiment name (output): " llm_exp_name
 fi
 
 if [[ "$dataset" == "optc" ]]
