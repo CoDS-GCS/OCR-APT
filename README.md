@@ -47,7 +47,7 @@ The system consists of multiple Python and Bash scripts that work together inter
      graphdb.connector.maxHttpHeaderSize = 1000000
      ```
    - [Create a repository](https://graphdb.ontotext.com/documentation/11.0/creating-a-repository.html) for each dataset and select the **RDFS-Plus (Optimized)** ruleset.  
-   - Download loading_files.tar.xz from our Zenodo [repository](https://doi.org/10.5281/zenodo.16969449), which contain the RDF provenance graphs in turtle format. Then extract them and move them to:  
+   - Download `loading_files.tar.xz` from our Zenodo [repository](https://doi.org/10.5281/zenodo.16969449), which contain the RDF provenance graphs in turtle format. Then extract them and move them to:  
      ```
      <PATH_TO_GraphDB_INSTANCE>/GraphDB/.
      ```
@@ -65,7 +65,7 @@ The system consists of multiple Python and Bash scripts that work together inter
    ```
 
 4. **Prepare datasets and models**  
-   Download "dataset.tar.xz" from our Zenodo [repository](https://doi.org/10.5281/zenodo.16969449), which contain data snapshots, ground truth labels, and trained models.  
+   Download `dataset.tar.xz` from our Zenodo [repository](https://doi.org/10.5281/zenodo.16969449), which contain data snapshots, ground truth labels, and trained models.  
    Extract them and move the `dataset` directory into the OCR-APT working directory.  
 
 5. **Run the detection pipeline**  
