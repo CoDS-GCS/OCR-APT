@@ -1,5 +1,7 @@
 # OCR-APT
 
+[![DOI](https://zenodo.org/badge/911290242.svg)](https://doi.org/10.5281/zenodo.16969449)
+
 **OCR-APT** is an APT detection system designed to identify anomalous nodes and subgraphs, prioritize alerts based on abnormality levels, and reconstruct attack stories to support comprehensive investigations.  
 
 The system leverages **GNN-based subgraph anomaly detection** to uncover suspicious activities and **LLM-based reporting** to generate human-like attack narratives.  
