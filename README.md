@@ -1,6 +1,7 @@
 # OCR-APT
 
-[![DOI](https://zenodo.org/badge/911290242.svg)](https://doi.org/10.5281/zenodo.16969449)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16989117.svg)](https://doi.org/10.5281/zenodo.16989117)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16987705.svg)](https://doi.org/10.5281/zenodo.16987705)
 
 **OCR-APT** is an APT detection system designed to identify anomalous nodes and subgraphs, prioritize alerts based on abnormality levels, and reconstruct attack stories to support comprehensive investigations.  
 
@@ -47,7 +48,7 @@ The system is composed of multiple Python and Bash scripts that work together.
      graphdb.connector.maxHttpHeaderSize = 1000000
      ```
    - [Create a repository](https://graphdb.ontotext.com/documentation/11.0/creating-a-repository.html) for each dataset and select the **RDFS-Plus (Optimized)** ruleset.  
-   - Download `loading_files.tar.xz` from our Zenodo [repository](https://doi.org/10.5281/zenodo.16969449), which contains the RDF provenance graphs in turtle format. Extract them and move them to:  
+   - Download `loading_files.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains the RDF provenance graphs in turtle format. Extract them and move them to:  
      ```
      <PATH_TO_GraphDB_INSTANCE>/GraphDB/.
      ```
@@ -65,7 +66,7 @@ The system is composed of multiple Python and Bash scripts that work together.
    ```
 
 4. **Prepare datasets and models**  
-   Download `dataset.tar.xz` from our Zenodo [repository](https://doi.org/10.5281/zenodo.16969449), which contains data snapshots, ground truth labels, and trained models.  
+   Download `dataset.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains data snapshots, ground truth labels, and trained models.  
    Extract them and move the `dataset` directory into the OCR-APT working directory.  
 
 5. **Run the detection pipeline**  
@@ -77,7 +78,7 @@ The system is composed of multiple Python and Bash scripts that work together.
      ```bash
      bash /bash_src/ocrapt-full-system-pipeline.sh
      ```
-   > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.16969449), so preprocessing can be skipped if desired.  
+   > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.16987705), so preprocessing can be skipped if desired.  
 
 ---
 
