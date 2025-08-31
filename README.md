@@ -10,22 +10,27 @@ The system leverages **GNN-based subgraph anomaly detection** to uncover suspici
 This repository contains the code for the paper **OCR-APT: Reconstructing APT Stories through Subgraph Anomaly Detection and LLMs**, accepted at ACM CCS 2025.
 
 ---
-
 ## Repository Roadmap
 
 The input to OCR-APT is audit logs in CSV format.  
 The system is composed of multiple Python and Bash scripts that work together.  
 
 - **`/src`** – Python scripts:
-  - **`sparql_queries.py`** – SPARQL queries for constructing subgraphs from the GraphDB database.  
-  - **`llm_prompt.py`** – Prompts used by the LLM-based attack investigator.  
-- **`/bash_src`** – Bash scripts for managing the pipeline.  
-- **`/recovered_reports`** – Reports generated in our experiments.  
-- **`/logs`** – Default directory for generated system logs.  
-- **`/dataset`** – Contains training/testing audit logs, ground truth labels, experiment checkpoints, trained GNN models, and results (including anomalous nodes, subgraphs, and recovered reports).  
+  - **`sparql_queries.py`** – Defines SPARQL queries for constructing subgraphs from the GraphDB database.  
+  - **`llm_prompt.py`** – Contains prompts used by the LLM-based attack investigator.  
+  - **`transform_to_RDF.py`** – Converts raw audit logs into RDF format for ingestion into GraphDB.  
+  - **`encode_to_PyG.py`** – Encodes provenance subgraphs into PyTorch Geometric (PyG) data structures for model training and inference.  
+  - **`train_gnn_models.py`** – Trains our one-class GNN model (`ocrgcn.py`) on benign data and applies it to identify anomalous nodes.  
+  - **`detect_anomalous_subgraphs.py`** – Constructs subgraphs and detects anomalous ones using trained models.  
+  - **`ocrapt_llm_investigator.py`** – Leverages LLMs to generate concise, human-readable attack investigation reports from anomalous subgraphs.  
+- **`/bash_src`** – Bash scripts for managing the pipeline:  
+  - **`ocrapt-full-system-pipeline.sh`** – Runs the complete OCR-APT workflow, from data preprocessing to report generation.  
+  - **`ocrapt-detection.sh`** – Runs only the detection phase (GNN-based anomaly detection and report generation).  
+- **`/recovered_reports`** – Contains reports generated in our experiments.  
+- **`/logs`** – Default directory for system-generated logs.  
+- **`/dataset`** – Provides training/testing audit logs, ground truth labels, experiment checkpoints, trained GNN models, and results (including anomalous nodes, subgraphs, and recovered reports). Our datasets are released in this [record](https://doi.org/10.5281/zenodo.16987705).  
 
 ---
-
 ## System Architecture
 
 ![System Architecture](OCR-APT-system.png)
