@@ -1,4 +1,4 @@
-name: envapt
+name: env-ocrapt
 channels:
   - pytorch
   - defaults
