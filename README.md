@@ -40,7 +40,7 @@ The system is composed of multiple Python and Bash scripts that work together.
 ## Setup OCR-APT
 
 1. **Create the Conda environment**  
-   The user should install Conda. From inside the `bash_src` directory, run the following script to create the environment using `requirements.txt`:
+   Install Conda, then from inside the `bash_src` directory run the following commands to create and activate the environment using `requirements.txt`:
 ```bash
    conda create -n env-ocrapt python=3.9
    conda activate env-ocrapt
@@ -49,30 +49,35 @@ The system is composed of multiple Python and Bash scripts that work together.
 
 2. **Set up GraphDB with RDF-Star**  
    - [Download and install GraphDB](https://graphdb.ontotext.com/documentation/11.0/graphdb-desktop-installation.html).  
-   - **Configure GraphDB instance**. For GraphDB Desktop, properties could be configured from the *Setting* window in the GraphDB Desktop application window ([More details](https://graphdb.ontotext.com/documentation/11.1/graphdb-desktop-installation.html)). Set a property with name: `graphdb.workbench.importDirectory` and value: `<PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/`. For GraphDB standalone server (this step is not required if using GraphDB Desktop), properties could be configured using the `conf/graphdb.properties` file, located in the GraphDB home directory ([More details](https://graphdb.ontotext.com/documentation/11.1/graphdb-standalone-server.html)). User could edit the `graphdb.properties` file directly or use the following command to set the property:
-    ```bash
-      graphdb -s -Dgraphdb.workbench.importDirectory=<PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/
-     ```
-   - Launch GraphDB Desktop, and access the GraphDB Workbench from `http://localhost:7200/` (The default port is 7200)
-   - Use Create a repository for each dataset using the GraphDB Workbench. Go to Setup ‣ Repositories, click Create New repository ‣ GraphDB Repository, write the dataset name in Repositoy ID and select the **RDFS-Plus (Optimized)** ruleset ([More Details](https://graphdb.ontotext.com/documentation/11.0/creating-a-repository.html)).   
-   - Download `loading_files.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains the RDF provenance graphs in turtle format. Extract them and move them to `<PATH_TO_GraphDB_INSTANCE>/GraphDB/.`.
-   - Load datasets into their repositories using the GraphDB Workbench. Go to Import ‣ Server files, write the dataset Base IRI (e.g., `https://DARPA_OPTC.graph`), select Named graph and write the host IRI (e.g., `https://DARPA_OPTC.graph/SysClient0051` ([More Details](https://graphdb.ontotext.com/documentation/11.0/loading-data-using-the-workbench.html)). For DARPA TC3 datasets load both the main PG file (e.g., `cadets_rdfs.ttl`) and the attribute file (e.g., `cadets_attributes_rdfs.ttl`) to the same Named GraphFor DARPA TC3 datasets load both the main PG file (e.g., `cadets_rdfs.ttl`) and the attribute file (e.g., `cadets_attributes_rdfs.ttl`) to the same Named Graph. 
-   Use the following IRI for our datasets/hosts:
-   ```json
-   https://DARPA_TC3.graph/cadets
-   https://DARPA_TC3.graph/theia
-   https://DARPA_TC3.graph/trace
-   https://DARPA_OPTC.graph/SysClient0201
-   https://DARPA_OPTC.graph/SysClient0501
-   https://DARPA_OPTC.graph/SysClient0051
-   https://NODLINK.graph/SimulatedUbuntu
-   https://NODLINK.graph/SimulatedWS12
-   https://NODLINK.graph/SimulatedW10
-   ```
-   
+   - **Configure GraphDB instance**: 
+     - For GraphDB Desktop, open the Settings window and set the property:
+       - Name: `graphdb.workbench.importDirectory`
+       - Value: `<PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/` ([More details](https://graphdb.ontotext.com/documentation/11.1/graphdb-desktop-installation.html))
+     - For the standalone server (not required for Desktop), edit `conf/graphdb.properties` in the GraphDB home directory or use the following command:
+        ```json
+        graphdb -s -Dgraphdb.workbench.importDirectory=<PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/
+        ```
+   - Launch GraphDB Desktop and open the Workbench at `http://localhost:7200/` (default port: 7200).  
+   - Create a repository for each dataset: **Setup → Repositories → Create New Repository → GraphDB Repository**. Set the dataset name as the **Repository ID** and select the **RDFS-Plus (Optimized)** ruleset ([More details](https://graphdb.ontotext.com/documentation/11.0/creating-a-repository.html)).  
+   - Download `loading_files.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains RDF provenance graphs in Turtle format. Extract and move them to `<PATH_TO_GraphDB_INSTANCE>/GraphDB/`.
+   - Load datasets into their repositories using the Workbench: **Import → Server files**. Set the dataset **Base IRI** (e.g., `https://NODLINK.graph`), choose **Named Graph**, and provide the host IRI (e.g., `https://NODLINK.graph/SimulatedW10`). 
+     - Use the following IRIs for our datasets/hosts:
+         ```json
+         https://DARPA_TC3.graph/cadets
+         https://DARPA_TC3.graph/theia
+         https://DARPA_TC3.graph/trace
+         https://DARPA_OPTC.graph/SysClient0201
+         https://DARPA_OPTC.graph/SysClient0501
+         https://DARPA_OPTC.graph/SysClient0051
+         https://NODLINK.graph/SimulatedUbuntu
+         https://NODLINK.graph/SimulatedWS12
+         https://NODLINK.graph/SimulatedW10
+         ```
+     - For **DARPA TC3 datasets**, load both the main provenance graph file (e.g., `cadets_rdfs.ttl`) and the attribute file (e.g., `cadets_attributes_rdfs.ttl`) into the same Named Graph ([More details](https://graphdb.ontotext.com/documentation/11.0/loading-data-using-the-workbench.html)).
+
 
 3. **Configure system settings**  
-   Create a `config.json` file in the OCR-APT working directory as follows: (Replace the placeholders with your repository URLs and OpenAI API keys)
+   Create a `config.json` file in the OCR-APT working directory as follows (replace the placeholders with your repository URLs and OpenAI API key):  
    ```json
    {
      "repository_url_tc3": "<TC3_URL>",
@@ -82,22 +87,22 @@ The system is composed of multiple Python and Bash scripts that work together.
    }
    ```
    
-
 4. **Prepare datasets and models**  
    Download `dataset.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains data snapshots, ground truth labels, and trained models.  
-   Extract them and move the `dataset` directory into the OCR-APT working directory.  
+   Extract it and move the `dataset` directory into the OCR-APT working directory.  
 
 5. **Run the detection pipeline**  
-   - From inside the `bash_src` directory, Run detection with pre-trained models:  
+   - From inside the `bash_src` directory, run detection with pre-trained models:  
      ```bash
      bash ocrapt-detection.sh
      ```
-   - From inside the `bash_src` directory, Run the full system pipeline (preprocessing + retraining + detection):  
+   - To run the full system pipeline (preprocessing + retraining + detection):  
      ```bash
      bash ocrapt-full-system-pipeline.sh
      ```
-   > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.16987705), so preprocessing can be skipped if desired.  
 
+   > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.16987705), so preprocessing can be skipped if desired.
+   
 ---
 
 ## Experiments with Locally Deployed LLMs

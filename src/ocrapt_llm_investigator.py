@@ -271,7 +271,7 @@ def prepare_document(df_id,processed_report):
     processed_report['description'] = processed_report['description'].str.replace(r'\s{2,}', ' ', regex=True)
     processed_report['timestamp'] = pd.to_datetime(processed_report['timestamp'])
     processed_report = processed_report.sort_values(by='timestamp')
-    processed_report = processed_report.groupby(processed_report['timestamp'].dt.floor('T'))['description'].value_counts().reset_index(name='count')
+    processed_report = processed_report.groupby(processed_report['timestamp'].dt.floor('min'))['description'].value_counts().reset_index(name='count')
     processed_report['description'] = processed_report.apply(lambda row: row['description'] + (' (' + str(row['count']) + ' times)' if row['count'] > 1 else ''), axis=1)
     processed_report = processed_report[["description","timestamp"]]
     processed_report['timestamp'] = processed_report['timestamp'].dt.strftime("%Y-%m-%d %H:%M")
