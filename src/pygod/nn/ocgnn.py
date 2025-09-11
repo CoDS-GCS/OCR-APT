@@ -178,7 +178,7 @@ class OCGNNBase(nn.Module):
         validation_pred = (validation_score.detach() > threshold).long()
         validation_pred = validation_pred.reshape(len(validation_pred), 1)
         validation_f1_score = f1_score(y_true=label, y_pred=validation_pred, zero_division=0)
-        print('Validation F1-score:', round(validation_f1_score.item(), 5))
+        print('Validation F1-score:', round(validation_f1_score, 5))
         TP, FP, TN, FN = self.man_confusion_matrix(y_true=label.int(), y_pred=validation_pred)
         if (TP + FN) == 0:
             validation_TPR = None
