@@ -44,7 +44,7 @@ The system is composed of multiple Python and Bash scripts that work together.
 ```bash
    conda create -n env-ocrapt python=3.9
    conda activate env-ocrapt
-   bash /bash_src/setup_environment.sh
+   bash setup_environment.sh
    ```
 
 2. **Set up GraphDB with RDF-Star**  
@@ -90,11 +90,11 @@ The system is composed of multiple Python and Bash scripts that work together.
 5. **Run the detection pipeline**  
    - From inside the `bash_src` directory, Run detection with pre-trained models:  
      ```bash
-     bash /bash_src/ocrapt-detection.sh
+     bash ocrapt-detection.sh
      ```
    - From inside the `bash_src` directory, Run the full system pipeline (preprocessing + retraining + detection):  
      ```bash
-     bash /bash_src/ocrapt-full-system-pipeline.sh
+     bash ocrapt-full-system-pipeline.sh
      ```
    > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.16987705), so preprocessing can be skipped if desired.  
 
