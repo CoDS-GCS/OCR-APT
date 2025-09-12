@@ -54,7 +54,7 @@ The system is composed of multiple Python and Bash scripts that work together.
        - Name: `graphdb.workbench.importDirectory`
        - Value: `<PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/` ([More details](https://graphdb.ontotext.com/documentation/11.1/graphdb-desktop-installation.html))
      - For the standalone server (not required for Desktop), edit `conf/graphdb.properties` in the GraphDB home directory or use the following command:
-        ```json
+        ```
         graphdb -s -Dgraphdb.workbench.importDirectory=<PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/
         ```
    - Launch GraphDB Desktop and open the Workbench at `http://localhost:7200/` (default port: 7200).  
@@ -62,7 +62,7 @@ The system is composed of multiple Python and Bash scripts that work together.
    - Download `loading_files.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains RDF provenance graphs in Turtle format. Extract and move them to `<PATH_TO_GraphDB_INSTANCE>/GraphDB/`.
    - Load datasets into their repositories using the Workbench: **Import → Server files**. Set the dataset **Base IRI** (e.g., `https://NODLINK.graph`), choose **Named Graph**, and provide the host IRI (e.g., `https://NODLINK.graph/SimulatedW10`). 
      - Use the following IRIs for our datasets/hosts:
-         ```json
+         ```
          https://DARPA_TC3.graph/cadets
          https://DARPA_TC3.graph/theia
          https://DARPA_TC3.graph/trace
