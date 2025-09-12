@@ -6,12 +6,13 @@ outlier-utils==0.0.5
 rich==13.9.4
 ipython==8.14.0
 outdated==0.2.2
-openai
-llama-index
-llama-index-llms-ollama
-llama-index-llms-deepseek
-llama-index-embeddings-huggingface
-llama-index-embeddings-ollama
+openai==1.107.1
+llama-index==0.14.0
+llama-index-llms-ollama==0.7.2
+llama-index-embeddings-ollama==0.8.3
+llama-index-llms-deepseek==0.2.1
+llama-index-embeddings-huggingface==0.6.1
+
 
 
 
