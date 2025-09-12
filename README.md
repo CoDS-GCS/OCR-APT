@@ -44,7 +44,7 @@ The system is composed of multiple Python and Bash scripts that work together.
 ```bash
    conda create -n env-ocrapt python=3.9
    conda activate env-ocrapt
-   bash setup_environment.sh
+   bash create_env.sh
    ```
 
 2. **Set up GraphDB with RDF-Star**  
