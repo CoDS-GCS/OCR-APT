@@ -1,6 +1,6 @@
 # OCR-APT
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17010220.svg)](https://doi.org/10.5281/zenodo.17010220)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17107271.svg)](https://doi.org/10.5281/zenodo.17107271)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16987705.svg)](https://doi.org/10.5281/zenodo.16987705)
 
 **OCR-APT** is an APT detection system designed to identify anomalous nodes and subgraphs, prioritize alerts based on abnormality levels, and reconstruct attack stories to support comprehensive investigations.  
@@ -60,20 +60,22 @@ The system is composed of multiple Python and Bash scripts that work together.
    - Launch GraphDB Desktop and open the Workbench at `http://localhost:7200/` (default port: 7200).  
    - Create a repository for each dataset: **Setup → Repositories → Create New Repository → GraphDB Repository**. Set the dataset name as the **Repository ID** and select the **RDFS-Plus (Optimized)** ruleset ([More details](https://graphdb.ontotext.com/documentation/11.0/creating-a-repository.html)).  
    - Download `loading_files.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains RDF provenance graphs in Turtle format. Extract and move them to `<PATH_TO_GraphDB_INSTANCE>/GraphDB/`.
-   - Load datasets into their repositories using the Workbench: **Import → Server files**. Set the dataset **Base IRI** (e.g., `https://NODLINK.graph`), choose **Named Graph**, and provide the host IRI (e.g., `https://NODLINK.graph/SimulatedW10`). 
-     - Use the following IRIs for our datasets/hosts:
-         ```
-         https://DARPA_TC3.graph/cadets
-         https://DARPA_TC3.graph/theia
-         https://DARPA_TC3.graph/trace
-         https://DARPA_OPTC.graph/SysClient0201
-         https://DARPA_OPTC.graph/SysClient0501
-         https://DARPA_OPTC.graph/SysClient0051
-         https://NODLINK.graph/SimulatedUbuntu
-         https://NODLINK.graph/SimulatedWS12
-         https://NODLINK.graph/SimulatedW10
-         ```
-     - For **DARPA TC3 datasets**, load both the main provenance graph file (e.g., `cadets_rdfs.ttl`) and the attribute file (e.g., `cadets_attributes_rdfs.ttl`) into the same Named Graph ([More details](https://graphdb.ontotext.com/documentation/11.0/loading-data-using-the-workbench.html)).
+   - Load datasets into their repositories using the Workbench: **Import → Server files**. Set the dataset **Base IRI** (e.g., `https://NODLINK.graph`), choose **Named Graph**, and provide the host IRI (e.g., `https://NODLINK.graph/SimulatedW10`). [For more details](https://graphdb.ontotext.com/documentation/11.0/loading-data-using-the-workbench.html).
+     - For **DARPA TC3 datasets**, load both the main provenance graph file (e.g.,`cadets_rdfs.ttl`) and the attribute file (e.g.,`cadets_attributes_rdfs.ttl`) into the same Named Graph .
+     - Files should be loaded to datasets as follows:
+       - DARPA TC3: 
+         - load `cadets_rdfs.ttl` then `cadets_attributes_rdfs.ttl` with the host IRI `https://DARPA_TC3.graph/cadets`
+         - load `theia_rdfs.ttl` then `theia_attributes_rdfs.ttl` with the host IRI `https://DARPA_TC3.graph/theia`
+         - load `trace_rdfs.ttl` then `trace_attributes_rdfs.ttl` with the host IRI `https://DARPA_TC3.graph/trace`
+       - DARPA OpTC:
+         - load `SysClient0201_1day_rdfs.ttl` with the host IRI `https://DARPA_OPTC.graph/SysClient0201`
+         - load `SysClient0501_1day_rdfs.ttl` with the host IRI `https://DARPA_OPTC.graph/SysClient0501`
+         - load `SysClient0051_1day_rdfs.ttl` with the host IRI `https://DARPA_OPTC.graph/SysClient0051`
+       - NODLINK:
+         - load `SimulatedUbuntu_rdfs.ttl` with the host IRI `https://NODLINK.graph/SimulatedUbuntu`
+         - load `SimulatedWS12_rdfs.ttl` with the host IRI `https://NODLINK.graph/SimulatedWS12`
+         - load `SimulatedW10_rdfs.ttl` with the host IRI `https://NODLINK.graph/SimulatedW10`
+
 
 
 3. **Configure system settings**  
