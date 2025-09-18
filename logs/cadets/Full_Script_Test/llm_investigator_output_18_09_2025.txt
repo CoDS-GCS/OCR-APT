@@ -1,0 +1,677 @@
+Namespace(dataset='tc3', host='cadets', root_path='../dataset/darpa_tc3/cadets/experiments/', exp_name='Full_Script_Test', inv_exp_name='expand_1_hop_MaxEdges5000_K15_ly3', llm_exp_name='output', GNN_model_name='OCRGCN_Dr0_ly3_bs0_ep100_beta0.5_LR0.005_Hly32_dynConVal0.001To0.05.model', llm_model_source='openai', llm_model='gpt-4o-mini', llm_embedding_model_source='openai', llm_embedding_model='text-embedding-3-large', abnormality_level='Moderate', anomalous='sub', load_index=False, runs=1, standard_prompt=False)
+******************************************
+Run number: 0
+Seed:  360
+subgraphs detected as anomalous IDs: [19, 18, 20]
+Number of nodes 3
+Initialze the memory
+Initialize the LLM model: gpt-4o-mini
+Prompt:  
+    The provided document contains log events related to anomaly detection alerts. 
+
+    Extract the list of IoCs from the document tc3_anomalous_subgraph_19.csv. Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ ["128.55.12.67", "128.55.12.1", "128.55.12.10", "128.55.12.110", "128.55.12.141", "128.55.12.55"]                                                                                                                         
+                                                                                                                                                                                                                           
+Filter hallucination from IOCs list
+Number of detected hallucinations is:  0
+Summarizing tc3_anomalous_subgraph_19.csv
+Prompt:  
+     Based on the logs in document tc3_anomalous_subgraph_19.csv and the extracted IoCs list: [ "128.55.12.67", "128.55.12.1", "128.55.12.10", "128.55.12.110", "128.55.12.141", "128.55.12.55" ]. 
+
+     Summarize the tc3_anomalous_subgraph_19.csv document into an attack report. 
+
+     The attack report includes the following sections: 
+
+     - A concise summary of the attack behavior, detailing key events and actions taken during the incident. 
+ Where applicable, specify the corresponding stage of the APT attack. 
+
+     - A table of IoCs detected in the document. 
+ Based on your cybersecurity expertise, add a concise security context beside each detected IoC, including the legitimate usage and exploitation likelihood. 
+
+     - A list of chronological log of actions, organized by minute. 
+
+     
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                      Attack Report: tc3_anomalous_subgraph_19.csv                                                                                       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+                                                                                                Summary of Attack Behavior                                                                                                 
+
+The logs from the document indicate a series of anomalous activities occurring on April 12, 2018, primarily focused on the closure of files and network flows. The sequence of events suggests a potential APT attack,     
+characterized by systematic actions that may indicate reconnaissance and data exfiltration efforts.                                                                                                                        
+
+ • 14:36: The process initiated multiple file closures (6 times) and closed a network flow from the IP address 128.55.12.67. This could indicate an attempt to clean up traces of previous activities or to finalize data  
+   transfers.                                                                                                                                                                                                              
+ • 14:37: The process continued with a significant number of file closures (10 times) and closed multiple network flows from various IP addresses, including 128.55.12.1, 128.55.12.10, 128.55.12.110, and 128.55.12.141.  
+   This behavior suggests a coordinated effort to manage data and possibly exfiltrate information.                                                                                                                         
+ • 14:38: The process closed files (5 times) and closed the flow from 128.55.12.55 (2 times), followed by the exit of the process. This finalization could indicate the end of the attack phase, potentially after data    
+   exfiltration.                                                                                                                                                                                                           
+
+The actions taken during this incident align with the Covering Tracks stage of the APT attack lifecycle, where the attacker seeks to erase evidence of their activities.                                                   
+
+
+                                                                                         Table of Indicators of Compromise (IoCs)                                                                                          
+
+                                                                                                                              
+  IoC             Security Context                                                                                            
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+  128.55.12.67    External IP address; could be a legitimate user or a compromised host. High likelihood of exploitation.     
+  128.55.12.1     External IP address; potential for malicious activity. Requires further investigation.                      
+  128.55.12.10    External IP address; may be associated with unauthorized access. Moderate to high exploitation likelihood.  
+  128.55.12.110   External IP address; could indicate a compromised system. High likelihood of exploitation.                  
+  128.55.12.141   External IP address; potential for malicious use. Requires monitoring for suspicious activity.              
+  128.55.12.55    External IP address; may be involved in data exfiltration. Moderate to high exploitation likelihood.        
+                                                                                                                              
+
+
+                                                                                               Chronological Log of Actions                                                                                                
+
+                                                                        
+  Timestamp          Action Description                                 
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+  2018-04-12 14:36   A process CLOSE a file (6 times).                  
+  2018-04-12 14:36   A process CLOSE the flow: 128.55.12.67.            
+  2018-04-12 14:37   A process CLOSE a file (10 times).                 
+  2018-04-12 14:37   A process CLOSE the flow: 128.55.12.1.             
+  2018-04-12 14:37   A process CLOSE the flow: 128.55.12.10.            
+  2018-04-12 14:37   A process CLOSE the flow: 128.55.12.110.           
+  2018-04-12 14:37   A process CLOSE the flow: 128.55.12.141.           
+  2018-04-12 14:38   A process CLOSE a file (5 times).                  
+  2018-04-12 14:38   A process CLOSE the flow: 128.55.12.55 (2 times).  
+  2018-04-12 14:38   A process EXIT a process.                          
+                                                                        
+
+This report highlights the suspicious activities observed in the logs, indicating a potential APT attack that warrants further investigation and monitoring of the identified IoCs.                                        
+response times is:  21.19722270965576
+Initialze the memory
+Initialize the LLM model: gpt-4o-mini
+Prompt:  
+    The provided document contains log events related to anomaly detection alerts. 
+
+    Extract the list of IoCs from the document tc3_anomalous_subgraph_18.csv. Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ ["192.113.144.28", "libpcap.so.8", "128.55.12.67", "128.55.12.10", "128.55.12.110"]                                                                                                                                       
+                                                                                                                                                                                                                           
+Filter hallucination from IOCs list
+Number of detected hallucinations is:  0
+Summarizing tc3_anomalous_subgraph_18.csv
+Prompt:  
+     Based on the logs in document tc3_anomalous_subgraph_18.csv and the extracted IoCs list: [ "192.113.144.28", "libpcap.so.8", "128.55.12.67", "128.55.12.10", "128.55.12.110" ]. 
+
+     Summarize the tc3_anomalous_subgraph_18.csv document into an attack report. 
+
+     The attack report includes the following sections: 
+
+     - A concise summary of the attack behavior, detailing key events and actions taken during the incident. 
+ Where applicable, specify the corresponding stage of the APT attack. 
+
+     - A table of IoCs detected in the document. 
+ Based on your cybersecurity expertise, add a concise security context beside each detected IoC, including the legitimate usage and exploitation likelihood. 
+
+     - A list of chronological log of actions, organized by minute. 
+
+     
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                      Attack Report: tc3_anomalous_subgraph_18.csv                                                                                       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+                                                                                                Summary of Attack Behavior                                                                                                 
+
+The logs indicate a series of suspicious activities that suggest a potential Advanced Persistent Threat (APT) attack. The timeline begins with a connection to the external IP address 192.113.144.28 on April 12, 2018, at
+14:35. This is followed by the creation of a pipe object and the mapping and opening of the file libpcap.so.8, which is a library commonly used for network packet capture. The presence of this file suggests that the    
+attacker may be attempting to monitor network traffic.                                                                                                                                                                     
+
+Throughout the incident, there are multiple instances of sending and receiving data to and from the external IP address, indicating possible command and control (C2) communication. The logs show a significant number of 
+file closures and additional connections to other external IPs (128.55.12.67, 128.55.12.10, and 128.55.12.110) during the same timeframe, which may indicate lateral movement or attempts to exfiltrate data.              
+
+The attack appears to culminate with the exit of a process on April 12, 2018, at 14:38, suggesting that the attacker may have completed their objectives or attempted to cover their tracks.                               
+
+                                                                                                 Stages of the APT Attack:                                                                                                 
+
+ • Initial Compromise: Connection to 192.113.144.28.                                                                                                                                                                       
+ • Command and Control: Multiple SENDTO and RECVFROM actions to/from 192.113.144.28.                                                                                                                                       
+ • Lateral Movement: Connections to 128.55.12.67, 128.55.12.10, and 128.55.12.110.                                                                                                                                         
+ • Covering Tracks: Process exit at 14:38.                                                                                                                                                                                 
+
+
+                                                                                                  Table of IoCs Detected                                                                                                   
+
+                                                                                                                                                                                  
+  IoC              Security Context                                                                                                                                               
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+  192.113.144.28   External IP address associated with potential C2 communication. High exploitation likelihood.                                                                  
+  libpcap.so.8     A legitimate library for packet capture; however, its usage in this context raises suspicion of network monitoring. Moderate to high exploitation likelihood.  
+  128.55.12.67     External IP address that may indicate lateral movement or data exfiltration. High exploitation likelihood.                                                     
+  128.55.12.10     Another external IP address involved in suspicious activity. High exploitation likelihood.                                                                     
+  128.55.12.110    External IP address that may be part of the attack infrastructure. High exploitation likelihood.                                                               
+                                                                                                                                                                                  
+
+
+                                                                                               Chronological Log of Actions                                                                                                
+
+                                                                                                      April 12, 2018                                                                                                       
+
+ • 14:35:                                                                                                                                                                                                                  
+    • CONNECT the flow: 192.113.144.28.                                                                                                                                                                                    
+    • CREATE_OBJECT a pipe.                                                                                                                                                                                                
+    • MMAP the file: libpcap.so.8.                                                                                                                                                                                         
+    • OPEN the file: libpcap.so.8.                                                                                                                                                                                         
+    • RECVFROM the flow: 192.113.144.28.                                                                                                                                                                                   
+    • SENDTO the flow: 192.113.144.28.                                                                                                                                                                                     
+ • 14:36:                                                                                                                                                                                                                  
+    • CLOSE a file (6 times).                                                                                                                                                                                              
+    • RECVFROM the flow: 192.113.144.28 (3 times).                                                                                                                                                                         
+    • CLOSE the flow: 128.55.12.67.                                                                                                                                                                                        
+    • SENDTO the flow: 192.113.144.28.                                                                                                                                                                                     
+ • 14:37:                                                                                                                                                                                                                  
+    • CLOSE a file (10 times).                                                                                                                                                                                             
+    • RECVFROM the flow: 192.113.144.28 (5 times).                                                                                                                                                                         
+    • CLOSE the flow: 128.55.12.10.                                                                                                                                                                                        
+    • CLOSE the flow: 128.55.12.110.                                                                                                                                                                                       
+    • SENDTO the flow: 192.113.144.28.                                                                                                                                                                                     
+ • 14:38:                                                                                                                                                                                                                  
+    • CLOSE a file (5 times).                                                                                                                                                                                              
+    • RECVFROM the flow: 192.113.144.28 (3 times).                                                                                                                                                                         
+    • SENDTO the flow: 192.113.144.28 (2 times).                                                                                                                                                                           
+    • CLOSE a pipe.                                                                                                                                                                                                        
+    • CREATE_OBJECT a pipe.                                                                                                                                                                                                
+    • EXIT a process.                                                                                                                                                                                                      
+
+This report highlights the suspicious activities captured in the logs, indicating a potential APT attack that warrants further investigation and response.                                                                 
+response times is:  26.934549570083618
+Initialze the memory
+Initialize the LLM model: gpt-4o-mini
+Prompt:  
+    The provided document contains log events related to anomaly detection alerts. 
+
+    Extract the list of IoCs from the document tc3_anomalous_subgraph_20.csv. Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ ["128.55.12.67", "128.55.12.110", "128.55.12.55"]                                                                                                                                                                         
+                                                                                                                                                                                                                           
+Filter hallucination from IOCs list
+Number of detected hallucinations is:  0
+Summarizing tc3_anomalous_subgraph_20.csv
+Prompt:  
+     Based on the logs in document tc3_anomalous_subgraph_20.csv and the extracted IoCs list: [ "128.55.12.67", "128.55.12.110", "128.55.12.55" ]. 
+
+     Summarize the tc3_anomalous_subgraph_20.csv document into an attack report. 
+
+     The attack report includes the following sections: 
+
+     - A concise summary of the attack behavior, detailing key events and actions taken during the incident. 
+ Where applicable, specify the corresponding stage of the APT attack. 
+
+     - A table of IoCs detected in the document. 
+ Based on your cybersecurity expertise, add a concise security context beside each detected IoC, including the legitimate usage and exploitation likelihood. 
+
+     - A list of chronological log of actions, organized by minute. 
+
+     
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                      Attack Report: tc3_anomalous_subgraph_20.csv                                                                                       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+                                                                                                Summary of Attack Behavior                                                                                                 
+
+The logs from the document indicate a series of anomalous activities occurring on April 12, 2018, primarily involving the closing of files and network flows. The sequence of events suggests a potential APT attack,      
+particularly in the stages of Command and Control and Covering Tracks.                                                                                                                                                     
+
+ • At 14:36, a process closed a file five times and also closed a network flow associated with the IP address 128.55.12.67. This could indicate an attempt to hide malicious activity or data exfiltration.                
+ • At 14:37, another file was closed ten times, followed by the closure of a flow linked to 128.55.12.110. The repeated closure of files may suggest an effort to erase traces of the attack.                              
+ • At 14:38, a process closed a file five times again and closed a flow associated with 128.55.12.55. This was followed by the exit of a process, which may indicate the conclusion of the attack phase or an attempt to   
+   maintain persistence by removing evidence.                                                                                                                                                                              
+
+The pattern of closing files and network flows suggests a deliberate effort to obscure the attacker's presence and activities, characteristic of advanced persistent threats.                                              
+
+
+                                                                                                  Table of IoCs Detected                                                                                                   
+
+                                                                                                                                                                                                                          
+  IoC             Security Context                                                                                                                                                                                        
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+  128.55.12.67    An external IP address that may be associated with malicious activity. Legitimate usage is possible, but exploitation likelihood is moderate to high based on the context of repeated file closures.    
+  128.55.12.110   Another external IP address potentially linked to the attack. Similar to the previous IoC, it may be used for command and control purposes, with a moderate to high likelihood of exploitation.         
+  128.55.12.55    This IP address is also flagged as suspicious. Its involvement in the closure of network flows raises concerns about its role in the attack, indicating a moderate to high likelihood of exploitation.  
+                                                                                                                                                                                                                          
+
+
+                                                                                               Chronological Log of Actions                                                                                                
+
+                                                               
+  Timestamp          Action Description                        
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+  2018-04-12 14:36   A process CLOSE a file (5 times).         
+  2018-04-12 14:36   A process CLOSE the flow: 128.55.12.67.   
+  2018-04-12 14:37   A process CLOSE a file (10 times).        
+  2018-04-12 14:37   A process CLOSE the flow: 128.55.12.110.  
+  2018-04-12 14:38   A process CLOSE a file (5 times).         
+  2018-04-12 14:38   A process CLOSE the flow: 128.55.12.55.   
+  2018-04-12 14:38   A process EXIT a process.                 
+                                                               
+
+This report highlights the suspicious activities captured in the logs, indicating a potential APT attack characterized by efforts to obscure malicious actions through the closure of files and network connections.       
+response times is:  12.591689109802246
+Initialze the memory
+Initialize the LLM model: gpt-4o-mini
+Names of provided documents are:  "tc3_anomalous_subgraph_19.csv", "tc3_anomalous_subgraph_18.csv", "tc3_anomalous_subgraph_20.csv"
+Prompt:  
+    The provided reports names are: "tc3_anomalous_subgraph_19.csv", "tc3_anomalous_subgraph_18.csv", "tc3_anomalous_subgraph_20.csv". 
+
+    Extract the three highest-priority IoCs related to the stage: Initial Compromise from each provided reports. 
+.
+    Focus on external IP addresses, suspicious or executable files, malicious processes, and exploitable processes. 
+
+    Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ ["128.55.12.67", "128.55.12.1", "128.55.12.10"]                                                                                                                                                                           
+                                                                                                                                                                                                                           
+Prompt:  
+    The provided reports names are: "tc3_anomalous_subgraph_19.csv", "tc3_anomalous_subgraph_18.csv", "tc3_anomalous_subgraph_20.csv". 
+
+    Extract the three highest-priority IoCs related to the stage: Internal Reconnaissance from each provided reports. 
+.
+    Focus on external IP addresses, suspicious or executable files, malicious processes, and exploitable processes. 
+
+    Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ []                                                                                                                                                                                                                        
+                                                                                                                                                                                                                           
+Prompt:  
+    The provided reports names are: "tc3_anomalous_subgraph_19.csv", "tc3_anomalous_subgraph_18.csv", "tc3_anomalous_subgraph_20.csv". 
+
+    Extract the three highest-priority IoCs related to the stage: Command and Control from each provided reports. 
+.
+    Focus on external IP addresses, suspicious or executable files, malicious processes, and exploitable processes. 
+
+    Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ []                                                                                                                                                                                                                        
+                                                                                                                                                                                                                           
+Prompt:  
+    The provided reports names are: "tc3_anomalous_subgraph_19.csv", "tc3_anomalous_subgraph_18.csv", "tc3_anomalous_subgraph_20.csv". 
+
+    Extract the three highest-priority IoCs related to the stage: Privilege Escalation from each provided reports. 
+.
+    Focus on external IP addresses, suspicious or executable files, malicious processes, and exploitable processes. 
+
+    Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ []                                                                                                                                                                                                                        
+                                                                                                                                                                                                                           
+Prompt:  
+    The provided reports names are: "tc3_anomalous_subgraph_19.csv", "tc3_anomalous_subgraph_18.csv", "tc3_anomalous_subgraph_20.csv". 
+
+    Extract the three highest-priority IoCs related to the stage: Lateral Movement from each provided reports. 
+.
+    Focus on external IP addresses, suspicious or executable files, malicious processes, and exploitable processes. 
+
+    Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ []                                                                                                                                                                                                                        
+                                                                                                                                                                                                                           
+Prompt:  
+    The provided reports names are: "tc3_anomalous_subgraph_19.csv", "tc3_anomalous_subgraph_18.csv", "tc3_anomalous_subgraph_20.csv". 
+
+    Extract the three highest-priority IoCs related to the stage: Maintain Persistence from each provided reports. 
+.
+    Focus on external IP addresses, suspicious or executable files, malicious processes, and exploitable processes. 
+
+    Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ []                                                                                                                                                                                                                        
+                                                                                                                                                                                                                           
+Prompt:  
+    The provided reports names are: "tc3_anomalous_subgraph_19.csv", "tc3_anomalous_subgraph_18.csv", "tc3_anomalous_subgraph_20.csv". 
+
+    Extract the three highest-priority IoCs related to the stage: Data Exfiltration from each provided reports. 
+.
+    Focus on external IP addresses, suspicious or executable files, malicious processes, and exploitable processes. 
+
+    Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ []                                                                                                                                                                                                                        
+                                                                                                                                                                                                                           
+Prompt:  
+    The provided reports names are: "tc3_anomalous_subgraph_19.csv", "tc3_anomalous_subgraph_18.csv", "tc3_anomalous_subgraph_20.csv". 
+
+    Extract the three highest-priority IoCs related to the stage: Covering Tracks from each provided reports. 
+.
+    Focus on external IP addresses, suspicious or executable files, malicious processes, and exploitable processes. 
+
+    Return the output only as a Python list, formatted as: ["IoC1", "IoC2", "IoC3", etc].
+    
+                                                                                                                                                                                                                           
+ ["128.55.12.67", "128.55.12.1", "128.55.12.10"]                                                                                                                                                                           
+                                                                                                                                                                                                                           
+Prompt:  
+    Based on the provided reports and the extracted IoCs list: [ "128.55.12.67", "128.55.12.1", "128.55.12.10", "128.55.12.67", "128.55.12.1", "128.55.12.10" ]. 
+
+    Summarize all provided reports into a comprehensive attack report. 
+
+    Consider all external IP addresses, suspicious or executable files, malicious processes, and exploitable processes referenced in the provided reports.
+    
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                                               Comprehensive Attack Report                                                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+                                                                                                Summary of Attack Behavior                                                                                                 
+
+The analysis of the provided reports indicates a series of coordinated anomalous activities that suggest a potential Advanced Persistent Threat (APT) attack. The logs primarily focus on the closure of files and network 
+flows, which are indicative of efforts to cover tracks and possibly exfiltrate data. The activities observed align with the Covering Tracks stage of the APT attack lifecycle.                                             
+
+                                                                                               Key Events and Actions Taken                                                                                                
+
+ • April 12, 2018: A sequence of file closures and network flow terminations was recorded, suggesting an attempt to erase evidence of prior activities. The following notable actions were observed:                       
+    • 14:36: A process initiated multiple file closures (6 times) and closed a network flow from the IP address 128.55.12.67. This action may indicate an effort to clean up traces of previous activities or finalize data
+      transfers.                                                                                                                                                                                                           
+    • 14:37: The process continued with a significant number of file closures (10 times) and closed multiple network flows from various IP addresses, including 128.55.12.1, 128.55.12.10, 128.55.12.110, and              
+      128.55.12.141. This behavior suggests a coordinated effort to manage data and possibly exfiltrate information.                                                                                                       
+    • 14:38: The process closed files (5 times) and closed the flow from 128.55.12.55 (2 times), followed by the exit of the process. This finalization could indicate the end of the attack phase, potentially after data 
+      exfiltration.                                                                                                                                                                                                        
+
+The actions taken during this incident highlight a systematic approach to covering tracks, which is a critical phase in the APT attack lifecycle.                                                                          
+
+
+                                                                                         Table of Indicators of Compromise (IoCs)                                                                                          
+
+                                                                                                                              
+  IoC             Security Context                                                                                            
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+  128.55.12.67    External IP address; could be a legitimate user or a compromised host. High likelihood of exploitation.     
+  128.55.12.1     External IP address; potential for malicious activity. Requires further investigation.                      
+  128.55.12.10    External IP address; may be associated with unauthorized access. Moderate to high exploitation likelihood.  
+  128.55.12.110   External IP address; could indicate a compromised system. High likelihood of exploitation.                  
+  128.55.12.141   External IP address; potential for malicious use. Requires monitoring for suspicious activity.              
+  128.55.12.55    External IP address; may be involved in data exfiltration. Moderate to high exploitation likelihood.        
+                                                                                                                              
+
+
+                                                                                               Chronological Log of Actions                                                                                                
+
+                                                                        
+  Timestamp          Action Description                                 
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+  2018-04-12 14:36   A process CLOSE a file (6 times).                  
+  2018-04-12 14:36   A process CLOSE the flow: 128.55.12.67.            
+  2018-04-12 14:37   A process CLOSE a file (10 times).                 
+  2018-04-12 14:37   A process CLOSE the flow: 128.55.12.1.             
+  2018-04-12 14:37   A process CLOSE the flow: 128.55.12.10.            
+  2018-04-12 14:37   A process CLOSE the flow: 128.55.12.110.           
+  2018-04-12 14:37   A process CLOSE the flow: 128.55.12.141.           
+  2018-04-12 14:38   A process CLOSE a file (5 times).                  
+  2018-04-12 14:38   A process CLOSE the flow: 128.55.12.55 (2 times).  
+  2018-04-12 14:38   A process EXIT a process.                          
+                                                                        
+
+
+                                                                                                        Conclusion                                                                                                         
+
+The logs analyzed from the reports indicate a sophisticated approach to data management and evidence elimination, characteristic of APT attacks. The identified IoCs warrant further investigation and monitoring to       
+prevent potential exploitation and ensure network security. Continuous vigilance is necessary to detect and mitigate any future threats associated with these indicators.                                                  
+response times is:  30.506641387939453
+Enrich the comprehensive_report with the highest-priority priority IP IoC
+Initialize the LLM model: gpt-4o-mini
+["128.55.12.110"]                                                                                                                                                                                                          
+
+                PREFIX graph: <https://DARPA_TC3.graph/cadets/>
+                SELECT DISTINCT ?subject_type ?subject_attr ?predicate ?object_type ?object_attr ?timestamp
+                FROM <https://DARPA_TC3.graph/cadets>
+                WHERE{
+                    << ?subject ?predicate ?object >> graph:timestamp ?timestamp .
+                    ?subject graph:anomalies ?subject_isAnomalous .
+                    ?subject graph:node-type ?subject_type .
+                    # ?object graph:node-type ?object_type .
+                    ?object graph:node-type graph:NetFlowObject .
+                    BIND(graph:NetFlowObject AS ?object_type) . 
+                    ?subject graph:node-attribute ?subject_attr .
+                    ?object graph:node-attribute ?object_attr .
+                    ?subject graph:is_Train "False" .
+                    ?object graph:is_Train "False" .
+                    FILTER(CONTAINS(lcase(?object_attr), "128.55.12.110")) .
+                    }
+            
+Empty DataFrame
+Columns: []
+Index: []
+The query didn't return any data
+Couldn't find context of IOC 128.55.12.110 in the PG database
+Enrich the comprehensive_report with the following highest-priority priority IP IoC
+Initialize the LLM model: gpt-4o-mini
+["128.55.12.110"]                                                                                                                                                                                                          
+["128.55.12.67"]                                                                                                                                                                                                           
+
+                PREFIX graph: <https://DARPA_TC3.graph/cadets/>
+                SELECT DISTINCT ?subject_type ?subject_attr ?predicate ?object_type ?object_attr ?timestamp
+                FROM <https://DARPA_TC3.graph/cadets>
+                WHERE{
+                    << ?subject ?predicate ?object >> graph:timestamp ?timestamp .
+                    ?subject graph:anomalies ?subject_isAnomalous .
+                    ?subject graph:node-type ?subject_type .
+                    # ?object graph:node-type ?object_type .
+                    ?object graph:node-type graph:NetFlowObject .
+                    BIND(graph:NetFlowObject AS ?object_type) . 
+                    ?subject graph:node-attribute ?subject_attr .
+                    ?object graph:node-attribute ?object_attr .
+                    ?subject graph:is_Train "False" .
+                    ?object graph:is_Train "False" .
+                    FILTER(CONTAINS(lcase(?object_attr), "128.55.12.67")) .
+                    }
+            
+Empty DataFrame
+Columns: []
+Index: []
+The query didn't return any data
+Couldn't find context of IOC 128.55.12.67 in the PG database
+Enrich the comprehensive_report with the following highest-priority priority IP IoC
+Initialize the LLM model: gpt-4o-mini
+["128.55.12.110"]                                                                                                                                                                                                          
+["128.55.12.1"]                                                                                                                                                                                                            
+
+                PREFIX graph: <https://DARPA_TC3.graph/cadets/>
+                SELECT DISTINCT ?subject_type ?subject_attr ?predicate ?object_type ?object_attr ?timestamp
+                FROM <https://DARPA_TC3.graph/cadets>
+                WHERE{
+                    << ?subject ?predicate ?object >> graph:timestamp ?timestamp .
+                    ?subject graph:anomalies ?subject_isAnomalous .
+                    ?subject graph:node-type ?subject_type .
+                    # ?object graph:node-type ?object_type .
+                    ?object graph:node-type graph:NetFlowObject .
+                    BIND(graph:NetFlowObject AS ?object_type) . 
+                    ?subject graph:node-attribute ?subject_attr .
+                    ?object graph:node-attribute ?object_attr .
+                    ?subject graph:is_Train "False" .
+                    ?object graph:is_Train "False" .
+                    FILTER(CONTAINS(lcase(?object_attr), "128.55.12.1")) .
+                    }
+            
+Empty DataFrame
+Columns: []
+Index: []
+The query didn't return any data
+Couldn't find context of IOC 128.55.12.1 in the PG database
+Enrich the comprehensive_report with the following highest-priority priority IP IoC
+Couldn't find context of IOC type IP in the PG database, after trying with 3 different IOCs
+Enrich the comprehensive_report with the highest-priority priority process IoC
+Initialize the LLM model: gpt-4o-mini
+["128.55.12.110"]                                                                                                                                                                                                          
+["128.55.12.10"]                                                                                                                                                                                                           
+
+                PREFIX graph: <https://DARPA_TC3.graph/cadets/>
+
+                SELECT DISTINCT ?subject_type ?subject_attr ?predicate ?object_type ?object_attr ?timestamp
+                FROM <https://DARPA_TC3.graph/cadets>
+                WHERE{
+                    << ?subject ?predicate ?object >> graph:timestamp ?timestamp .
+                    ?subject graph:anomalies ?subject_isAnomalous .
+                    ?subject graph:node-type ?subject_type .
+                    ?object graph:node-type ?object_type . 
+                    ?subject graph:node-attribute ?subject_attr .
+                    ?object graph:node-attribute ?object_attr .
+                    ?subject graph:is_Train "False" .
+                    ?object graph:is_Train "False" .
+                    # FILTER(CONTAINS(?subject_attr, "128.55.12.10") || CONTAINS(?object_attr, "128.55.12.10")) .
+                    FILTER(CONTAINS(lcase(?subject_attr), "128.55.12.10")) .
+                    FILTER(?object_type IN (graph:NetFlowObject , graph:FILE_OBJECT_FILE)).
+                    FILTER(?subject_type IN (graph:SUBJECT_PROCESS)).
+                    }
+            
+Empty DataFrame
+Columns: []
+Index: []
+The query didn't return any data
+
+                PREFIX graph: <https://DARPA_TC3.graph/cadets/>
+                SELECT DISTINCT ?subject_type ?subject_attr ?predicate ?object_type ?object_attr ?timestamp
+                FROM <https://DARPA_TC3.graph/cadets>
+                WHERE{
+                    << ?subject ?predicate ?object >> graph:timestamp ?timestamp .
+                    ?subject graph:anomalies ?subject_isAnomalous .
+                    ?subject graph:node-type ?subject_type .
+                    # ?object graph:node-type ?object_type .
+                    ?object graph:node-type graph:FILE_OBJECT_FILE .
+                    BIND(graph:FILE_OBJECT_FILE AS ?object_type) . 
+                    ?subject graph:node-attribute ?subject_attr .
+                    ?object graph:node-attribute ?object_attr .
+                    ?subject graph:is_Train "False" .
+                    ?object graph:is_Train "False" .
+                    FILTER(CONTAINS(lcase(?object_attr), "128.55.12.10")) .
+                    }
+            
+Empty DataFrame
+Columns: []
+Index: []
+The query didn't return any data
+Couldn't find context of IOC 128.55.12.10 in the PG database
+Enrich the comprehensive_report with the following highest-priority priority process IoC
+Initialize the LLM model: gpt-4o-mini
+["128.55.12.110"]                                                                                                                                                                                                          
+["128.55.12.141"]                                                                                                                                                                                                          
+
+                PREFIX graph: <https://DARPA_TC3.graph/cadets/>
+
+                SELECT DISTINCT ?subject_type ?subject_attr ?predicate ?object_type ?object_attr ?timestamp
+                FROM <https://DARPA_TC3.graph/cadets>
+                WHERE{
+                    << ?subject ?predicate ?object >> graph:timestamp ?timestamp .
+                    ?subject graph:anomalies ?subject_isAnomalous .
+                    ?subject graph:node-type ?subject_type .
+                    ?object graph:node-type ?object_type . 
+                    ?subject graph:node-attribute ?subject_attr .
+                    ?object graph:node-attribute ?object_attr .
+                    ?subject graph:is_Train "False" .
+                    ?object graph:is_Train "False" .
+                    # FILTER(CONTAINS(?subject_attr, "128.55.12.141") || CONTAINS(?object_attr, "128.55.12.141")) .
+                    FILTER(CONTAINS(lcase(?subject_attr), "128.55.12.141")) .
+                    FILTER(?object_type IN (graph:NetFlowObject , graph:FILE_OBJECT_FILE)).
+                    FILTER(?subject_type IN (graph:SUBJECT_PROCESS)).
+                    }
+            
+Empty DataFrame
+Columns: []
+Index: []
+The query didn't return any data
+
+                PREFIX graph: <https://DARPA_TC3.graph/cadets/>
+                SELECT DISTINCT ?subject_type ?subject_attr ?predicate ?object_type ?object_attr ?timestamp
+                FROM <https://DARPA_TC3.graph/cadets>
+                WHERE{
+                    << ?subject ?predicate ?object >> graph:timestamp ?timestamp .
+                    ?subject graph:anomalies ?subject_isAnomalous .
+                    ?subject graph:node-type ?subject_type .
+                    # ?object graph:node-type ?object_type .
+                    ?object graph:node-type graph:FILE_OBJECT_FILE .
+                    BIND(graph:FILE_OBJECT_FILE AS ?object_type) . 
+                    ?subject graph:node-attribute ?subject_attr .
+                    ?object graph:node-attribute ?object_attr .
+                    ?subject graph:is_Train "False" .
+                    ?object graph:is_Train "False" .
+                    FILTER(CONTAINS(lcase(?object_attr), "128.55.12.141")) .
+                    }
+            
+Empty DataFrame
+Columns: []
+Index: []
+The query didn't return any data
+Couldn't find context of IOC 128.55.12.141 in the PG database
+Enrich the comprehensive_report with the following highest-priority priority process IoC
+Initialize the LLM model: gpt-4o-mini
+["128.55.12.110"]                                                                                                                                                                                                          
+["128.55.12.55"]                                                                                                                                                                                                           
+
+                PREFIX graph: <https://DARPA_TC3.graph/cadets/>
+
+                SELECT DISTINCT ?subject_type ?subject_attr ?predicate ?object_type ?object_attr ?timestamp
+                FROM <https://DARPA_TC3.graph/cadets>
+                WHERE{
+                    << ?subject ?predicate ?object >> graph:timestamp ?timestamp .
+                    ?subject graph:anomalies ?subject_isAnomalous .
+                    ?subject graph:node-type ?subject_type .
+                    ?object graph:node-type ?object_type . 
+                    ?subject graph:node-attribute ?subject_attr .
+                    ?object graph:node-attribute ?object_attr .
+                    ?subject graph:is_Train "False" .
+                    ?object graph:is_Train "False" .
+                    # FILTER(CONTAINS(?subject_attr, "128.55.12.55") || CONTAINS(?object_attr, "128.55.12.55")) .
+                    FILTER(CONTAINS(lcase(?subject_attr), "128.55.12.55")) .
+                    FILTER(?object_type IN (graph:NetFlowObject , graph:FILE_OBJECT_FILE)).
+                    FILTER(?subject_type IN (graph:SUBJECT_PROCESS)).
+                    }
+            
+Empty DataFrame
+Columns: []
+Index: []
+The query didn't return any data
+
+                PREFIX graph: <https://DARPA_TC3.graph/cadets/>
+                SELECT DISTINCT ?subject_type ?subject_attr ?predicate ?object_type ?object_attr ?timestamp
+                FROM <https://DARPA_TC3.graph/cadets>
+                WHERE{
+                    << ?subject ?predicate ?object >> graph:timestamp ?timestamp .
+                    ?subject graph:anomalies ?subject_isAnomalous .
+                    ?subject graph:node-type ?subject_type .
+                    # ?object graph:node-type ?object_type .
+                    ?object graph:node-type graph:FILE_OBJECT_FILE .
+                    BIND(graph:FILE_OBJECT_FILE AS ?object_type) . 
+                    ?subject graph:node-attribute ?subject_attr .
+                    ?object graph:node-attribute ?object_attr .
+                    ?subject graph:is_Train "False" .
+                    ?object graph:is_Train "False" .
+                    FILTER(CONTAINS(lcase(?object_attr), "128.55.12.55")) .
+                    }
+            
+Empty DataFrame
+Columns: []
+Index: []
+The query didn't return any data
+Couldn't find context of IOC 128.55.12.55 in the PG database
+Enrich the comprehensive_report with the following highest-priority priority process IoC
+Couldn't find context of IOC type process in the PG database, after trying with 3 different IOCs
+Enrich the comprehensive_report with the highest-priority priority file IoC
+Initialize the LLM model: gpt-4o-mini
+["128.55.12.110"]                                                                                                                                                                                                          
+["128.55.12.55"]                                                                                                                                                                                                           
+There are no remaining IoCs to select, as all have been marked as visited.                                                                                                                                                 
+No list found in the text.
+No IOC selected from the document
+None
+Memory usage (ru_maxrss) :  544.13671875  MB
+Memory usage (psutil) :  544.13671875 MB
+The CPU usage is (per process):  0.0
+The CPU usage is :  7.01904296875
+used virtual memory GB: 10.489143371582031  percent 37.9
+Total time:  146.91515016555786 seconds.
