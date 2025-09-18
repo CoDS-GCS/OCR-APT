@@ -1,0 +1,133 @@
+******************************************
+Run number: 0
+Seed:  360
+Namespace(dataset='nodlink', host='SimulatedW10', exp_name='Full_Script_Test', root_path='../dataset/nodlink/SimulatedW10/experiments/', load_model='OCRGCN_Dr0_ly3_bs0_ep100_beta0.5_LR0.005_Hly32_dynConVal0.001To0.05.model', save_model=None, detector='OCRGCN', multiple_models=True, dynamic_contamination=True, runs=1, num_layers=3, input_layer=64, hidden_channels=32, adjust_hidden_channels=False, n_classes=2, dropout=0.0, beta=0.5, warmup=2, visualize_training=False, lr=0.005, epochs=100, contamination=0.001, batch_size=0, batch_size_percentage=None, flexable_rate=0.001, max_contamination=0.05, top_k=1000, random_features=False, save_emb=False, debug_one_subject=False, debug_subjects=-1)
+Deleting : ../dataset/nodlink/SimulatedW10/experiments/Full_Script_Test : No such file or directory
+Extracting ../dataset/nodlink/SimulatedW10/experiments/Full_Script_Test.zip
+Loading necessary files...
+This might take a while.
+Processing graphs...
+Converting graphs into PyG objects...
+Saving...
+resource.struct_rusage(ru_utime=5.33865, ru_stime=1.971825, ru_maxrss=821156, ru_ixrss=0, ru_idrss=0, ru_isrss=0, ru_minflt=185200, ru_majflt=5, ru_nswap=0, ru_inblock=37712, ru_oublock=597448, ru_msgsnd=0, ru_msgrcv=0, ru_nsignals=0, ru_nvcsw=1029, ru_nivcsw=282)
+dataset init time= 0:00:00.009655  sec.
+Number of relations 12
+Remove  0  malicious samples from training set
+Total Training Samples: 44908
+Number of malicious samples: 0
+Number of benign samples: 44908
+Total Validating Samples: 2589
+Number of malicious samples: 29
+Number of benign samples: 2560
+The contamination based on validating data is: 0.011
+The contamination has set to be between 0.001  and 0.05
+Total Testing Samples: 14663
+Number of malicious samples: 162
+Number of benign samples: 14501
+Size of input layers: 15
+****************************************
+Testing with model for node type: PROCESS
+Remove  0  malicious samples from training set:
+Total Training Samples: 5765
+Number of malicious samples: 0
+Number of benign samples: 5765
+Total Validating Samples: 375
+Number of malicious samples: 29
+Number of benign samples: 346
+The contamination based on validating data is: 0.077
+The contamination has set to be between 0.001  and 0.05
+Total Testing Samples: 2121
+Number of malicious samples: 162
+Number of benign samples: 1959
+
+*****************************************
+Testing set CM:
+ [[1847  112]
+ [ 151   11]]
+Detection time:  4.4916768074035645 seconds.
+****************************************
+Testing with model for node type: FILE
+Remove  0  malicious samples from training set:
+Total Training Samples: 38700
+Number of malicious samples: 0
+Number of benign samples: 38700
+Total Validating Samples: 2180
+Number of malicious samples: 0
+Number of benign samples: 2180
+The contamination based on validating data is: 0.0
+The contamination has set to be between 0.001  and 0.05
+Total Testing Samples: 12351
+Number of malicious samples: 0
+Number of benign samples: 12351
+
+*****************************************
+Testing set CM:
+ [[12347     4]
+ [    0     0]]
+Detection time:  4.584046363830566 seconds.
+****************************************
+Testing with model for node type: NET
+Remove  0  malicious samples from training set:
+Total Training Samples: 443
+Number of malicious samples: 0
+Number of benign samples: 443
+Total Validating Samples: 34
+Number of malicious samples: 0
+Number of benign samples: 34
+The contamination based on validating data is: 0.0
+The contamination has set to be between 0.001  and 0.05
+Total Testing Samples: 191
+Number of malicious samples: 0
+Number of benign samples: 191
+
+*****************************************
+Testing set CM:
+ [[189   2]
+ [  0   0]]
+Detection time:  4.411070823669434 seconds.
+****************************************
+Total detection time is: 13.486793994903564
+
+*****************************************
+
+*******************************************
+TP: 162, FP: 40, FN: 0, TN: 14461
+Precision: 0.802, Recall: 1.0, Fscore: 0.89
+Computed related nodes in  20.746495485305786
+Final AUC is: 0.6724785263851535
+Folder Deleted
+Total detection time for this run is 0    13.486794
+Name: detection_time_run, dtype: float64
+
+************************************************************
+
+************************************************************
+Average performance across all runs:
+       accuracy  precision  recall  f_measure     tp       tn    fp   fn  tpr  \
+count  1.000000    1.00000     1.0    1.00000    1.0      1.0   1.0  1.0  1.0   
+mean   0.997272    0.80198     1.0    0.89011  162.0  14461.0  40.0  0.0  1.0   
+std         NaN        NaN     NaN        NaN    NaN      NaN   NaN  NaN  NaN   
+min    0.997272    0.80198     1.0    0.89011  162.0  14461.0  40.0  0.0  1.0   
+25%    0.997272    0.80198     1.0    0.89011  162.0  14461.0  40.0  0.0  1.0   
+50%    0.997272    0.80198     1.0    0.89011  162.0  14461.0  40.0  0.0  1.0   
+75%    0.997272    0.80198     1.0    0.89011  162.0  14461.0  40.0  0.0  1.0   
+max    0.997272    0.80198     1.0    0.89011  162.0  14461.0  40.0  0.0  1.0   
+
+            fpr  detection_time_run  memory_usage_mb  
+count  1.000000            1.000000         1.000000  
+mean   0.002758           13.486794     10486.179688  
+std         NaN                 NaN              NaN  
+min    0.002758           13.486794     10486.179688  
+25%    0.002758           13.486794     10486.179688  
+50%    0.002758           13.486794     10486.179688  
+75%    0.002758           13.486794     10486.179688  
+max    0.002758           13.486794     10486.179688  
+Total time:  41.30612301826477 seconds.
+program IOPS (over total time):  447.6091835543249
+I/O counters pio(read_count=16245, write_count=2244, read_bytes=46178304, write_bytes=306012160, read_chars=356438547, write_chars=305693413)
+None
+Memory usage (ru_maxrss) :  10486.1796875  MB
+Memory usage (psutil) :  568.41796875 MB
+The CPU usage is (per process):  0.0
+The CPU usage is :  10.906982421875
+used virtual memory GB: 9.590442657470703  percent 34.6

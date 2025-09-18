@@ -189,7 +189,7 @@ def result_df_to_subgraph_nx(results_df):
         results_df["timestamp"] = results_df["timestamp"].apply(lambda x:convert_timestamp_to_datetime(x))
     else:
         results_df["timestamp"] = results_df["timestamp"].apply(
-            lambda x: datetime.fromtimestamp(int(x) // 1000000000, tz=pytz.timezone("America/Nipigon"))).dt.floor('S')
+            lambda x: datetime.fromtimestamp(int(x) // 1000000000, tz=pytz.timezone("America/Nipigon"))).dt.floor('s')
         results_df['timestamp'] = results_df['timestamp'].apply(lambda t: t.strftime(date_format))
     print("Total number of triples before dropping duplicated actions (within one second)", len(results_df))
     results_df = results_df.drop_duplicates()

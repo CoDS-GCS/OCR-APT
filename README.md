@@ -1,7 +1,7 @@
 # OCR-APT
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17107271.svg)](https://doi.org/10.5281/zenodo.17107271)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16987705.svg)](https://doi.org/10.5281/zenodo.16987705)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17148221.svg)](https://doi.org/10.5281/zenodo.17148221)
 
 **OCR-APT** is an APT detection system designed to identify anomalous nodes and subgraphs, prioritize alerts based on abnormality levels, and reconstruct attack stories to support comprehensive investigations.  
 
@@ -28,7 +28,7 @@ The system is composed of multiple Python and Bash scripts that work together.
   - **`ocrapt-detection.sh`** – Runs only the detection phase (GNN-based anomaly detection and report generation).  
 - **`/recovered_reports`** – Contains reports generated in our experiments.  
 - **`/logs`** – Default directory for system-generated logs.  
-- **`/dataset`** – Provides training/testing audit logs, ground truth labels, experiment checkpoints, trained GNN models, and results (including anomalous nodes, subgraphs, and recovered reports). Our datasets are released in this [record](https://doi.org/10.5281/zenodo.16987705).  
+- **`/dataset`** – Provides training/testing audit logs, ground truth labels, experiment checkpoints, trained GNN models, and results (including anomalous nodes, subgraphs, and recovered reports). Our datasets are released in this [record](https://doi.org/10.5281/zenodo.17148221).  
 
 ---
 ## System Architecture
@@ -48,62 +48,49 @@ The system is composed of multiple Python and Bash scripts that work together.
    ```
 
 2. **Set up GraphDB with RDF-Star**  
-   - [Download and install GraphDB](https://graphdb.ontotext.com/documentation/11.0/graphdb-desktop-installation.html).  
-   - **Configure GraphDB instance**: 
-     - For GraphDB Desktop, open the Settings window and set the property:
-       - Name: `graphdb.workbench.importDirectory`
-       - Value: `<PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/` ([More details](https://graphdb.ontotext.com/documentation/11.1/graphdb-desktop-installation.html))
-     - For the standalone server (not required for Desktop), edit `conf/graphdb.properties` in the GraphDB home directory or use the following command:
-        ```
-        graphdb -s -Dgraphdb.workbench.importDirectory=<PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/
-        ```
-   - Launch GraphDB Desktop and open the Workbench at `http://localhost:7200/` (default port: 7200).  
-   - Create a repository for each dataset: **Setup → Repositories → Create New Repository → GraphDB Repository**. Set the dataset name as the **Repository ID** and select the **RDFS-Plus (Optimized)** ruleset ([More details](https://graphdb.ontotext.com/documentation/11.0/creating-a-repository.html)).  
-   - Download `loading_files.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains RDF provenance graphs in Turtle format. Extract and move them to `<PATH_TO_GraphDB_INSTANCE>/GraphDB/`.
-   - Load datasets into their repositories using the Workbench: **Import → Server files**. Set the dataset **Base IRI** (e.g., `https://NODLINK.graph`), choose **Named Graph**, and provide the host IRI (e.g., `https://NODLINK.graph/SimulatedW10`). [For more details](https://graphdb.ontotext.com/documentation/11.0/loading-data-using-the-workbench.html).
-     - For **DARPA TC3 datasets**, load both the main provenance graph file (e.g.,`cadets_rdfs.ttl`) and the attribute file (e.g.,`cadets_attributes_rdfs.ttl`) into the same Named Graph .
-     - Files should be loaded to datasets as follows:
-       - DARPA TC3: 
-         - load `cadets_rdfs.ttl` then `cadets_attributes_rdfs.ttl` with the host IRI `https://DARPA_TC3.graph/cadets`
-         - load `theia_rdfs.ttl` then `theia_attributes_rdfs.ttl` with the host IRI `https://DARPA_TC3.graph/theia`
-         - load `trace_rdfs.ttl` then `trace_attributes_rdfs.ttl` with the host IRI `https://DARPA_TC3.graph/trace`
-       - DARPA OpTC:
-         - load `SysClient0201_1day_rdfs.ttl` with the host IRI `https://DARPA_OPTC.graph/SysClient0201`
-         - load `SysClient0501_1day_rdfs.ttl` with the host IRI `https://DARPA_OPTC.graph/SysClient0501`
-         - load `SysClient0051_1day_rdfs.ttl` with the host IRI `https://DARPA_OPTC.graph/SysClient0051`
-       - NODLINK:
-         - load `SimulatedUbuntu_rdfs.ttl` with the host IRI `https://NODLINK.graph/SimulatedUbuntu`
-         - load `SimulatedWS12_rdfs.ttl` with the host IRI `https://NODLINK.graph/SimulatedWS12`
-         - load `SimulatedW10_rdfs.ttl` with the host IRI `https://NODLINK.graph/SimulatedW10`
-
-
+   - Download and install GraphDB Desktop from this [link](https://graphdb.ontotext.com/documentation/11.0/graphdb-desktop-installation.html).  
+   - Download `GraphDB_repositories.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.17148221). This archive contains a copy of the GraphDB repositories folder. 
+     - To set up quickly, extract the archive and replace the entire `repositories` directory under `<PATH_TO_GraphDB_INSTANCE>/.graphdb/data/` with the one from `GraphDB_repositories/repositories/`.
+     - If you prefer to keep your existing repositories, extract the archive and copy only the three provided repositories into the same location.
+     - This setup is sufficient for running our evaluation datasets. For instructions on adding new repositories, see `Configure_GraphDB.md`, which provides a step-by-step guide.
+   - Launch GraphDB Desktop and open the Workbench at `http://localhost:7200/` (default port: 7200). 
+     - The expected result is to find three repositories under **Setup → Repositories** in the GraphDB Workbench. Their IDs should be:  
+       - `darpa-tc3`  
+       - `darpa-optc-1day`  
+       - `simulated-nodlink` 
 
 3. **Configure system settings**  
-   Create a `config.json` file in the OCR-APT working directory as follows (replace the placeholders with your repository URLs and OpenAI API key):  
+   Create a `config.json` file in the OCR-APT working directory as follows (Users should replace the placeholders with their OpenAI API key):  
    ```json
    {
-     "repository_url_tc3": "<TC3_URL>",
-     "repository_url_optc": "<OPTC_URL>",
-     "repository_url_nodlink": "<NODLINK_URL>",
+     "repository_url_tc3": "http://localhost:7200//repositories/darpa-tc3",
+     "repository_url_optc": "http://localhost:7200/repositories/darpa-optc-1day",
+     "repository_url_nodlink": "http://localhost:7200/repositories/simulated-nodlink",
      "openai_api_key": "<API_KEY>"
    }
    ```
    
 4. **Prepare datasets and models**  
-   Download `dataset.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains data snapshots, ground truth labels, and trained models.  
+   Download `dataset.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.17148221), which contains data snapshots, ground truth labels, and trained models.  
    Extract it and move the `dataset` directory into the OCR-APT working directory.  
 
+
 5. **Run the detection pipeline**  
-   - From inside the `bash_src` directory, run detection with pre-trained models:  
+   - From inside the `bash_src` directory, run OCR-APT detection using pre-trained models:  
      ```bash
      bash ocrapt-detection.sh
      ```
+ 
+   - The expected output is three log files created in `/logs/<HOST>/Full_Script_Test`:
+     - The file `DetectAnomalousNodes_*.txt`: node anomaly detection results using trained OCRGCN models.
+     - The file `DetectAnomalousSubgraphs_*.txt`: anomalous subgraph detection results, including the detection performance of OCR-APT. 
+     - The file `llm_investigator_output_*.txt`: human-readable attack investigation reports generated by the LLM-based module.
+   - A sample run logs for the SimulatedW10 host is provided under `/logs/SimulatedW10/Full_Script_Test`, which you can use to verify successful execution.
    - To run the full system pipeline (preprocessing + retraining + detection):  
-     ```bash
-     bash ocrapt-full-system-pipeline.sh
-     ```
-
-   > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.16987705), so preprocessing can be skipped if desired.
+      ```bash
+      bash ocrapt-full-system-pipeline.sh
+      ```
+   > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.17148221), so preprocessing can be skipped if desired.
    
 ---
 
