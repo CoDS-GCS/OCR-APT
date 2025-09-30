@@ -19,7 +19,7 @@ The system is composed of multiple Python and Bash scripts that work together.
   - **`sparql_queries.py`** – Defines SPARQL queries for constructing subgraphs from the GraphDB database.  
   - **`llm_prompt.py`** – Contains prompts used by the LLM-based attack investigator.  
   - **`transform_to_RDF.py`** – Converts raw audit logs into RDF format for ingestion into GraphDB.  
-  - **`encode_to_PyG.py`** – Encodes provenance subgraphs into PyTorch Geometric (PyG) data structures for model training and inference.  
+  - **`encode_to_PyG.py`** – Encodes provenance graphs into PyTorch Geometric (PyG) data structures for model training and inference.  
   - **`train_gnn_models.py`** – Trains our one-class GNN model (`ocrgcn.py`) on benign data and applies it to identify anomalous nodes.  
   - **`detect_anomalous_subgraphs.py`** – Constructs subgraphs and detects anomalous ones using trained models.  
   - **`ocrapt_llm_investigator.py`** – Leverages LLMs to generate concise, human-readable attack investigation reports from anomalous subgraphs.  
