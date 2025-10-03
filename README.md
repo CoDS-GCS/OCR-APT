@@ -1,6 +1,6 @@
 # OCR-APT
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17107271.svg)](https://doi.org/10.5281/zenodo.17107271)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17254415.svg)](https://doi.org/10.5281/zenodo.17254415)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17254415.svg)](https://doi.org/10.5281/zenodo.17254415)
 
 
