@@ -29,7 +29,7 @@ The system is composed of multiple Python and Bash scripts that work together.
   - **`ocrapt-detection.sh`** – Runs only the detection phase (GNN-based anomaly detection and report generation).  
 - **`/recovered_reports`** – Contains reports generated in our experiments.  
 - **`/logs`** – Default directory for system-generated logs.  
-- **`/dataset`** – Provides training/testing audit logs, ground truth labels, experiment checkpoints, trained GNN models, and results (including anomalous nodes, subgraphs, and recovered reports). Our datasets are released in this [record](https://doi.org/10.5281/zenodo.17148221).  
+- **`/dataset`** – Provides training/testing audit logs, ground truth labels, experiment checkpoints, trained GNN models, and results (including anomalous nodes, subgraphs, and recovered reports). Our datasets are released in this [record](https://doi.org/10.5281/zenodo.17254415).  
 
 ---
 ## System Architecture
@@ -50,7 +50,7 @@ The system is composed of multiple Python and Bash scripts that work together.
 
 2. **Set up GraphDB with RDF-Star**  
    - Download and install GraphDB Desktop from this [link](https://graphdb.ontotext.com/documentation/11.0/graphdb-desktop-installation.html).  
-   - Download `GraphDB_repositories.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.17148221). This archive contains a copy of the GraphDB repositories folder. 
+   - Download `GraphDB_repositories.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.17254415). This archive contains a copy of the GraphDB repositories folder. 
      - To set up quickly, extract the archive and replace the entire `repositories` directory under `<PATH_TO_GraphDB_INSTANCE>/.graphdb/data/` with the one from `GraphDB_repositories/repositories/`.
      - If you prefer to keep your existing repositories, extract the archive and copy only the three provided repositories into the same location.
      - This setup is sufficient for running our evaluation datasets. For instructions on adding new repositories, see `Configure_GraphDB.md`, which provides a step-by-step guide.
@@ -72,7 +72,7 @@ The system is composed of multiple Python and Bash scripts that work together.
    ```
    
 4. **Prepare datasets and models**  
-   Download `dataset.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.17148221), which contains data snapshots, ground truth labels, and trained models.  
+   Download `dataset.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.17254415), which contains data snapshots, ground truth labels, and trained models.  
    Extract it and move the `dataset` directory into the OCR-APT working directory.  
 
 
@@ -90,7 +90,7 @@ The system is composed of multiple Python and Bash scripts that work together.
       ```bash
       bash ocrapt-full-system-pipeline.sh
       ```
-   > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.17148221), so preprocessing can be skipped if desired.
+   > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.17254415), so preprocessing can be skipped if desired.
    
 ---
 
