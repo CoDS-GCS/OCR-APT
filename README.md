@@ -105,3 +105,22 @@ We evaluated OCR-APT using **locally deployed LLMs** and compared the generated 
 **Key finding:** LLAMA3, combined with the best-performing embedding model, generated reports **comparable in quality to ChatGPT**.  
 
 Detailed experimental results are available in this [spreadsheet](Experiments_with_locally_deployed_LLMs.xlsx).  
+
+## Citation 
+### Bibtex
+```
+@inproceedings{10.1145/3719027.3765219,
+author = {Aly, Ahmed and Mansour, Essam and Youssef, Amr},
+title = {{OCR-APT}: Reconstructing {APT} Stories from Audit Logs using Subgraph Anomaly Detection and {LLMs}},
+year = {2025},
+isbn = {9798400715259},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3719027.3765219},
+doi = {10.1145/3719027.3765219},
+booktitle = {Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security},
+pages = {261–275},
+series = {CCS '25}
+}
+
+```
