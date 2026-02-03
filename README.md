@@ -1,7 +1,8 @@
 # OCR-APT
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17010220.svg)](https://doi.org/10.5281/zenodo.17010220)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16987705.svg)](https://doi.org/10.5281/zenodo.16987705)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17254415.svg)](https://doi.org/10.5281/zenodo.17254415)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17254415.svg)](https://doi.org/10.5281/zenodo.17254415)
+
 
 **OCR-APT** is an APT detection system designed to identify anomalous nodes and subgraphs, prioritize alerts based on abnormality levels, and reconstruct attack stories to support comprehensive investigations.  
 
@@ -19,7 +20,7 @@ The system is composed of multiple Python and Bash scripts that work together.
   - **`sparql_queries.py`** – Defines SPARQL queries for constructing subgraphs from the GraphDB database.  
   - **`llm_prompt.py`** – Contains prompts used by the LLM-based attack investigator.  
   - **`transform_to_RDF.py`** – Converts raw audit logs into RDF format for ingestion into GraphDB.  
-  - **`encode_to_PyG.py`** – Encodes provenance subgraphs into PyTorch Geometric (PyG) data structures for model training and inference.  
+  - **`encode_to_PyG.py`** – Encodes provenance graphs into PyTorch Geometric (PyG) data structures for model training and inference.  
   - **`train_gnn_models.py`** – Trains our one-class GNN model (`ocrgcn.py`) on benign data and applies it to identify anomalous nodes.  
   - **`detect_anomalous_subgraphs.py`** – Constructs subgraphs and detects anomalous ones using trained models.  
   - **`ocrapt_llm_investigator.py`** – Leverages LLMs to generate concise, human-readable attack investigation reports from anomalous subgraphs.  
@@ -28,7 +29,7 @@ The system is composed of multiple Python and Bash scripts that work together.
   - **`ocrapt-detection.sh`** – Runs only the detection phase (GNN-based anomaly detection and report generation).  
 - **`/recovered_reports`** – Contains reports generated in our experiments.  
 - **`/logs`** – Default directory for system-generated logs.  
-- **`/dataset`** – Provides training/testing audit logs, ground truth labels, experiment checkpoints, trained GNN models, and results (including anomalous nodes, subgraphs, and recovered reports). Our datasets are released in this [record](https://doi.org/10.5281/zenodo.16987705).  
+- **`/dataset`** – Provides training/testing audit logs, ground truth labels, experiment checkpoints, trained GNN models, and results (including anomalous nodes, subgraphs, and recovered reports). Our datasets are released in this [record](https://doi.org/10.5281/zenodo.17254415).  
 
 ---
 ## System Architecture
@@ -48,60 +49,48 @@ The system is composed of multiple Python and Bash scripts that work together.
    ```
 
 2. **Set up GraphDB with RDF-Star**  
-   - [Download and install GraphDB](https://graphdb.ontotext.com/documentation/11.0/graphdb-desktop-installation.html).  
-   - **Configure GraphDB instance**: 
-     - For GraphDB Desktop, open the Settings window and set the property:
-       - Name: `graphdb.workbench.importDirectory`
-       - Value: `<PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/` ([More details](https://graphdb.ontotext.com/documentation/11.1/graphdb-desktop-installation.html))
-     - For the standalone server (not required for Desktop), edit `conf/graphdb.properties` in the GraphDB home directory or use the following command:
-        ```
-        graphdb -s -Dgraphdb.workbench.importDirectory=<PATH_TO_GraphDB_INSTANCE>/GraphDB/loading_files/
-        ```
-   - Launch GraphDB Desktop and open the Workbench at `http://localhost:7200/` (default port: 7200).  
-   - Create a repository for each dataset: **Setup → Repositories → Create New Repository → GraphDB Repository**. Set the dataset name as the **Repository ID** and select the **RDFS-Plus (Optimized)** ruleset ([More details](https://graphdb.ontotext.com/documentation/11.0/creating-a-repository.html)).  
-   - Download `loading_files.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains RDF provenance graphs in Turtle format. Extract and move them to `<PATH_TO_GraphDB_INSTANCE>/GraphDB/`.
-   - Load datasets into their repositories using the Workbench: **Import → Server files**. Set the dataset **Base IRI** (e.g., `https://NODLINK.graph`), choose **Named Graph**, and provide the host IRI (e.g., `https://NODLINK.graph/SimulatedW10`). 
-     - Use the following IRIs for our datasets/hosts:
-         ```
-         https://DARPA_TC3.graph/cadets
-         https://DARPA_TC3.graph/theia
-         https://DARPA_TC3.graph/trace
-         https://DARPA_OPTC.graph/SysClient0201
-         https://DARPA_OPTC.graph/SysClient0501
-         https://DARPA_OPTC.graph/SysClient0051
-         https://NODLINK.graph/SimulatedUbuntu
-         https://NODLINK.graph/SimulatedWS12
-         https://NODLINK.graph/SimulatedW10
-         ```
-     - For **DARPA TC3 datasets**, load both the main provenance graph file (e.g., `cadets_rdfs.ttl`) and the attribute file (e.g., `cadets_attributes_rdfs.ttl`) into the same Named Graph ([More details](https://graphdb.ontotext.com/documentation/11.0/loading-data-using-the-workbench.html)).
-
+   - Download and install GraphDB Desktop from this [link](https://graphdb.ontotext.com/documentation/11.0/graphdb-desktop-installation.html).  
+   - Download `GraphDB_repositories.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.17254415). This archive contains a copy of the GraphDB repositories folder. 
+     - To set up quickly, extract the archive and replace the entire `repositories` directory under `<PATH_TO_GraphDB_INSTANCE>/.graphdb/data/` with the one from `GraphDB_repositories/repositories/`.
+     - If you prefer to keep your existing repositories, extract the archive and copy only the three provided repositories into the same location.
+     - This setup is sufficient for running our evaluation datasets. For instructions on adding new repositories, see `Configure_GraphDB.md`, which provides a step-by-step guide.
+   - Launch GraphDB Desktop and open the Workbench at `http://localhost:7200/` (default port: 7200). 
+     - The expected result is to find three repositories under **Setup → Repositories** in the GraphDB Workbench. Their IDs should be:  
+       - `darpa-tc3`  
+       - `darpa-optc-1day`  
+       - `simulated-nodlink` 
 
 3. **Configure system settings**  
-   Create a `config.json` file in the OCR-APT working directory as follows (replace the placeholders with your repository URLs and OpenAI API key):  
+   Create a `config.json` file in the OCR-APT working directory as follows (Users should replace the placeholders with their OpenAI API key):  
    ```json
    {
-     "repository_url_tc3": "<TC3_URL>",
-     "repository_url_optc": "<OPTC_URL>",
-     "repository_url_nodlink": "<NODLINK_URL>",
+     "repository_url_tc3": "http://localhost:7200//repositories/darpa-tc3",
+     "repository_url_optc": "http://localhost:7200/repositories/darpa-optc-1day",
+     "repository_url_nodlink": "http://localhost:7200/repositories/simulated-nodlink",
      "openai_api_key": "<API_KEY>"
    }
    ```
    
 4. **Prepare datasets and models**  
-   Download `dataset.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.16987705), which contains data snapshots, ground truth labels, and trained models.  
+   Download `dataset.tar.xz` from our dataset [record](https://doi.org/10.5281/zenodo.17254415), which contains data snapshots, ground truth labels, and trained models.  
    Extract it and move the `dataset` directory into the OCR-APT working directory.  
 
+
 5. **Run the detection pipeline**  
-   - From inside the `bash_src` directory, run detection with pre-trained models:  
+   - From inside the `bash_src` directory, run OCR-APT detection using pre-trained models:  
      ```bash
      bash ocrapt-detection.sh
      ```
+   - The expected output is three log files created in `/logs/<HOST>/Full_Script_Test`:
+     - The file `DetectAnomalousNodes_*.txt`: node anomaly detection results using trained OCRGCN models.
+     - The file `DetectAnomalousSubgraphs_*.txt`: anomalous subgraph detection results, including the detection performance of OCR-APT. 
+     - The file `llm_investigator_output_*.txt`: human-readable attack investigation reports generated by the LLM-based module.
+   - A sample run logs for the **cadets** host is provided under `/logs/cadets/Full_Script_Test`, which you can use to verify successful execution.
    - To run the full system pipeline (preprocessing + retraining + detection):  
-     ```bash
-     bash ocrapt-full-system-pipeline.sh
-     ```
-
-   > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.16987705), so preprocessing can be skipped if desired.
+      ```bash
+      bash ocrapt-full-system-pipeline.sh
+      ```
+   > **Note:** Preprocessed files are already available [here](https://doi.org/10.5281/zenodo.17254415), so preprocessing can be skipped if desired.
    
 ---
 
@@ -116,3 +105,22 @@ We evaluated OCR-APT using **locally deployed LLMs** and compared the generated 
 **Key finding:** LLAMA3, combined with the best-performing embedding model, generated reports **comparable in quality to ChatGPT**.  
 
 Detailed experimental results are available in this [spreadsheet](Experiments_with_locally_deployed_LLMs.xlsx).  
+
+## Citation 
+### Bibtex
+```
+@inproceedings{10.1145/3719027.3765219,
+author = {Aly, Ahmed and Mansour, Essam and Youssef, Amr},
+title = {{OCR-APT}: Reconstructing {APT} Stories from Audit Logs using Subgraph Anomaly Detection and {LLMs}},
+year = {2025},
+isbn = {9798400715259},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3719027.3765219},
+doi = {10.1145/3719027.3765219},
+booktitle = {Proceedings of the 2025 ACM SIGSAC Conference on Computer and Communications Security},
+pages = {261–275},
+series = {CCS '25}
+}
+
+```

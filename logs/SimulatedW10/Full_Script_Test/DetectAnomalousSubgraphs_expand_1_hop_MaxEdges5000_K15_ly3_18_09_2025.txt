@@ -1,0 +1,280 @@
+Namespace(dataset='nodlink', host='SimulatedW10', runs=1, exp_name='Full_Script_Test', inv_exp_name='expand_1_hop_MaxEdges5000_K15_ly3', model='OCRGCN_Dr0_ly3_bs0_ep100_beta0.5_LR0.005_Hly32_dynConVal0.001To0.05.model', root_path='../dataset/nodlink/SimulatedW10/experiments/', number_of_hops=1, abnormality_level='Moderate', max_edges=5000, top_k=15, top_k_anomalous_subgraphs=10, min_nodes=3, expand_2_hop='no', top_k_percent=None, anomalies_path_only=False, backwards_only=False, anomalies_or_process_only=False, draw_subgraphs=False, get_node_attrs=True, construct_from_anomaly_subgraph=True, remove_duplicated_subgraph=True, correlate_anomalous_once=True, process_centric=False)
+Check Covered IOCs in all dataset nodes
+Number of covered IOCS of attack APT29  is: 28
+The covered IOCS are: {'C:/Windows/Prefetch/7Z.EXE-B3C8A0EA.pf', 'C:/USERS/ADMINISTRATOR/DESKTOP/SHELL/SPOLSV.EXE', 'C:/Windows/Prefetch/MIMIKATZ.EXE-7E8EAA73.pf', 'C:/Users/Administrator/Desktop/shell/chromeRemoteServices.ps1', 'C:/WINDOWS/Prefetch/MIMIKATZ2.EXE-6908EA75.pf', 'C:/USERS/ADMINISTRATOR/DESKTOP/SHELL/7Z.EXE', 'C:/Windows/System32/certutil.exe', 'C:/WINDOWS/Prefetch/7Z.EXE-B3C8A0EA.pf', 'C:/Users/Administrator/Desktop/shell/7z.exe', '127.0.0.1,127.0.0.1/32', 'C:/Users/Administrator/AppData/Local/pgadmin4/User Data/Default/Local Storage/http_127.0.0.1_56852.localstorage', 'C:/Users/Administrator/Desktop/shell/HookSSLX64.dll', 'C:/WINDOWS/Prefetch/SPOLSV.EXE-1CF8D2B8.pf', 'C:/Windows/Prefetch/SPOLSV.EXE-1CF8D2B8.pf', 'C:/USERS/ADMINISTRATOR/DESKTOP/SHELL/CHROMEREMOTESERVICES.PS1', 'C:/Users/Administrator/Desktop/shell/mimikatz.exe', 'C:/Users/Administrator/Desktop/shell/Invoke-Mimikatz.ps1', 'C:/Windows/Prefetch/MIMIKATZ2.EXE-6908EA75.pf', '192.168.0.74,124.223.85.207/32', 'C:/WINDOWS/SYSTEM32/CERTUTIL.EXE', 'C:/Users/Administrator/Desktop/shell/mimikatz2.exe', 'C:/Users/Administrator/Desktop/shell/spolsv.exe', '//127.0.0.1/PIPE/srvsvc', 'C:/Users/Administrator/Desktop/shell/Invoke-PSImage.ps1', 'C:/Users/Administrator/AppData/Local/pgadmin4/User Data/Default/Local Storage/http_127.0.0.1_55194.localstorage', 'C:/Users/Administrator/Desktop/shell/T1059.006.py', 'C:/Windows/Prefetch/CERTUTIL.EXE-28F1E0C1.pf', 'C:/WINDOWS/Prefetch/CERTUTIL.EXE-28F1E0C1.pf'}
+Number of covered IOCS of attack FIN6  is: 24
+The covered IOCS are: {'C:/Users/ADMINI~1/Desktop/shell/lazagne1.exe', 'C:/Users/Administrator/Desktop/shell/procdump.exe', 'C:/Windows/Prefetch/7Z.EXE-B3C8A0EA.pf', 'C:/USERS/ADMINISTRATOR/DESKTOP/SHELL/SPOLSV.EXE', 'C:/Users/Administrator/Desktop/shell/T1059.003_script.bat', 'C:/Windows/Prefetch/CALC.EXE-FC7DCD38.pf', 'C:/USERS/ADMINISTRATOR/DESKTOP/SHELL/7Z.EXE', 'C:/WINDOWS/Prefetch/7Z.EXE-B3C8A0EA.pf', 'C:/Users/Administrator/Desktop/shell/7z.exe', 'C:/WINDOWS/Prefetch/SPOLSV.EXE-1CF8D2B8.pf', 'C:/Users/Administrator/Desktop/shell/HookSSLX64.dll', 'C:/WINDOWS/Prefetch/CALC.EXE-43F37294.pf', 'C:/Users/ADMINI~1/AppData/Local/Temp/T1059.003_script.bat', 'C:/Windows/Prefetch/SPOLSV.EXE-1CF8D2B8.pf', 'C:/Windows/System32/calc.exe', 'C:/USERS/ADMINISTRATOR/APPDATA/LOCAL/TEMP/T1059.003_SCRIPT.BAT', 'C:/Users/Administrator/Desktop/shell/T1059.007.vbs', '192.168.0.74,124.223.85.207/32', 'C:/Windows/Prefetch/PROCDUMP.EXE-9E78CB3F.pf', 'C:/Users/Administrator/Desktop/shell/spolsv.exe', 'C:/Windows/Prefetch/LAZAGNE1.EXE-4C941CEC.pf', 'C:/Windows/Prefetch/CALC.EXE-43F37294.pf', 'C:/Windows/SysWOW64/calc.exe', 'C:/Users/Administrator/Desktop/shell/lazagne1.exe'}
+Number of covered IOCS of attack Sidewinder  is: 21
+The covered IOCS are: {'certutil', 'C:/Windows/Prefetch/MSHTA.EXE-5D4FFD8E.pf', 'C:/USERS/ADMINISTRATOR/DESKTOP/SHELL/SPOLSV.EXE', 'C:/WINDOWS/WinSxS/Manifests/amd64_microsoft-windows-certutil_31bf3856ad364e35_10.0.19041.1466_none_2a353b9ae89e20d7.manifest', 'C:/Windows/System32/certutil.exe', '127.0.0.1,127.0.0.1/32', 'C:/Users/Administrator/AppData/Local/pgadmin4/User Data/Default/Local Storage/http_127.0.0.1_56852.localstorage', 'C:/WINDOWS/Prefetch/SPOLSV.EXE-1CF8D2B8.pf', 'C:/Windows/Prefetch/SPOLSV.EXE-1CF8D2B8.pf', 'C:/WINDOWS/Prefetch/MSHTA.EXE-5D4FFD8E.pf', 'C:/Users/Administrator/Desktop/shell/T1059.007.vbs', '192.168.0.74,124.223.85.207/32', 'C:/WINDOWS/SYSTEM32/CERTUTIL.EXE', 'C:/Users/Administrator/Desktop/shell/spolsv.exe', '//127.0.0.1/PIPE/srvsvc', 'C:/Users/Administrator/AppData/Local/pgadmin4/User Data/Default/Local Storage/http_127.0.0.1_55194.localstorage', 'C:/Windows/System32/mshta.exe', 'C:/Windows/Prefetch/CERTUTIL.EXE-28F1E0C1.pf', 'C:/WINDOWS/Prefetch/CERTUTIL.EXE-28F1E0C1.pf', 'C:/Windows/Prefetch/MSHTA.EXE-392EB492.pf', 'C:/WINDOWS/SYSWOW64/MSHTA.EXE'}
+The total number of covered IOCs is 49
+________________________________________________
+Extracting ../dataset/nodlink/SimulatedW10/experiments/Full_Script_Test.zip
+Loading necessary files...
+This might take a while.
+Processing graphs...
+Converting graphs into PyG objects...
+Saving...
+resource.struct_rusage(ru_utime=5.726808, ru_stime=2.010932, ru_maxrss=852200, ru_ixrss=0, ru_idrss=0, ru_isrss=0, ru_minflt=209050, ru_majflt=0, ru_nswap=0, ru_inblock=0, ru_oublock=597456, ru_msgsnd=0, ru_msgrcv=0, ru_nsignals=0, ru_nvcsw=4280, ru_nivcsw=648)
+DEBUG: Number of testing cases  14663
+DEBUG:  {'FILE': 0, 'NET': 1, 'PROCESS': 2, ('PROCESS', 'Load', 'FILE'): 0, ('PROCESS', 'Read', 'FILE'): 1, ('PROCESS', 'Recv', 'NET'): 2, ('PROCESS', 'Send', 'NET'): 3, ('PROCESS', 'Start', 'PROCESS'): 4, ('PROCESS', 'Write', 'FILE'): 5, ('FILE', 'inv_Load', 'PROCESS'): 6, ('FILE', 'inv_Read', 'PROCESS'): 7, ('NET', 'inv_Recv', 'PROCESS'): 8, ('NET', 'inv_Send', 'PROCESS'): 9, ('PROCESS', 'inv_Start', 'PROCESS'): 10, ('FILE', 'inv_Write', 'PROCESS'): 11}
+DEBUG: edge_index stats tensor(1347167882204) tensor(0) tensor(62159)
+******************************************
+Run number: 0
+Seed:  360
+Number of anomalies nodes:  129
+malicious nodes per node type: node_type
+PROCESS    162
+Name: count, dtype: int64
+Number of benign nodes predicted anomalies:  118
+Number of malicious nodes predicted anomalies:  11
+Number of nodes labelled malicious:  162
+Check Covered IOCs in all raised anomalies nodes
+Number of covered IOCS of attack APT29  is: 1
+The covered IOCS are: {'C:/Users/Administrator/Desktop/shell/HookSSLX64.dll'}
+Number of covered IOCS of attack FIN6  is: 1
+The covered IOCS are: {'C:/Users/Administrator/Desktop/shell/HookSSLX64.dll'}
+Number of covered IOCS of attack Sidewinder  is: 1
+The covered IOCS are: {'certutil'}
+The total number of covered IOCs is 2
+________________________________________________
+Number of inserted anomalies nodes: 129
+Number of nodes with attributes 4701
+Total number of triples before dropping node attributes 666074
+Total number of triples after dropping node attributes 666074
+The timestamp format of host SimulatedW10  is not accurate, need to be fixed
+Total number of triples before dropping duplicated actions (within one second) 666074
+Total number of triples after dropping duplicated actions (within one second) 38931
+Number of nodes in queried subgraph object: 4701
+Number of edges in queried subgraph object: 38931
+The subgraph query time is:  18.78227734565735 seconds.
+Number of initially disconnected nodes nodes: 0
+Number of initially correlated nodes: 129
+Total number of FILE nodes is 4 
+Number of seed nodes for   FILE is 4
+Total number of NET nodes is 2 
+Number of seed nodes for   NET is 2
+Total number of PROCESS nodes is 123 
+Number of seed nodes for   PROCESS is 15
+Total Number of seed nodes: 21
+Debug: seed node is 836a1ea52eabfc6cc87e7800ee63aff9-net
+subgraph is less than  3 nodes
+The traverse time is:  0.00010752677917480469 seconds.
+DEBUG: number of correlated_anomalies_nodes 0
+In seed number 0, number of remaining anomalous nodes is 129
+Debug: seed node is cf24cfe7371460b57ace9b6e25140fb6-net
+subgraph is less than  3 nodes
+The traverse time is:  4.029273986816406e-05 seconds.
+DEBUG: number of correlated_anomalies_nodes 0
+In seed number 1, number of remaining anomalous nodes is 129
+Debug: seed node is d6a4075f1f47575a2e3e304f162bcf99-process
+subgraph is less than  3 nodes
+The traverse time is:  2.288818359375e-05 seconds.
+DEBUG: number of correlated_anomalies_nodes 0
+In seed number 2, number of remaining anomalous nodes is 129
+Debug: seed node is c18752a624efdb26658be03b24ea9c33-process
+subgraph is less than  3 nodes
+The traverse time is:  2.3365020751953125e-05 seconds.
+DEBUG: number of correlated_anomalies_nodes 0
+In seed number 3, number of remaining anomalous nodes is 129
+Debug: seed node is fe573cd1af25e96ca9d409f68a38c985-file
+Constructed a subgraph with 5 nodes and 5 edges
+The traverse time is:  0.0005266666412353516 seconds.
+DEBUG: number of correlated_anomalies_nodes 5
+In seed number 4, number of remaining anomalous nodes is 124
+Debug: seed node is 367afa16af963542400d7e21da891b75-process
+Constructed a subgraph with 8 nodes and 41 edges
+The traverse time is:  0.00024628639221191406 seconds.
+DEBUG: number of correlated_anomalies_nodes 13
+In seed number 5, number of remaining anomalous nodes is 118
+Debug: seed node is dd45045f8c68db9f54e70c67048d32e8-process
+subgraph is less than  3 nodes
+The traverse time is:  2.8848648071289062e-05 seconds.
+DEBUG: number of correlated_anomalies_nodes 13
+In seed number 6, number of remaining anomalous nodes is 118
+Debug: seed node is c867226f906d9bad6a50cdc6238daa02-process
+subgraph is less than  3 nodes
+The traverse time is:  2.765655517578125e-05 seconds.
+DEBUG: number of correlated_anomalies_nodes 13
+In seed number 7, number of remaining anomalous nodes is 118
+Debug: seed node is 0c2ddc8a45bbf4c306845d4490bdfa61-file
+Constructed a subgraph with 4 nodes and 3 edges
+The traverse time is:  8.177757263183594e-05 seconds.
+DEBUG: number of correlated_anomalies_nodes 17
+In seed number 8, number of remaining anomalous nodes is 115
+Debug: seed node is 1f9292a9cc4e17c95184359256f48fbe-file
+subgraph is less than  3 nodes
+The traverse time is:  2.4080276489257812e-05 seconds.
+DEBUG: number of correlated_anomalies_nodes 17
+In seed number 9, number of remaining anomalous nodes is 115
+Debug: seed node is da88f1744045b43ee262857126f5041c-file
+Constructed a subgraph with 3 nodes and 2 edges
+The traverse time is:  0.0001952648162841797 seconds.
+DEBUG: number of correlated_anomalies_nodes 19
+In seed number 10, number of remaining anomalous nodes is 114
+Debug: seed node is 0c9f5ddf102197f96a245f55cae5bbe6-process
+Constructed a subgraph with 95 nodes and 567 edges
+The traverse time is:  0.007538795471191406 seconds.
+DEBUG: number of correlated_anomalies_nodes 113
+In seed number 11, number of remaining anomalous nodes is 39
+Debug: seed node is 36a1694bce9815b7e38a9dad05ad42e0-process
+partition a graph with 8 nodes and 5631 edges
+Couldn't partition the big subgraph
+partitioned a subgraph with 8 nodes and 5631 edges
+Sampling a subgraph with 8 nodes and 5631 edges (sample from different actions)
+sampled a subgraph with 8 nodes and 4999 edges
+Remains unsampled a subgraph with 0 nodes and 0 edges (sample from different actions)
+Partition time:  0.05402517318725586 seconds.
+Constructed a subgraph with 8 nodes and 4999 edges
+The traverse time is:  0.06959724426269531 seconds.
+DEBUG: number of correlated_anomalies_nodes 121
+In seed number 12, number of remaining anomalous nodes is 32
+Debug: seed node is 6bc9bdf5c84cbeb6280d934edaf87602-process
+subgraph is less than  3 nodes
+The traverse time is:  0.0037834644317626953 seconds.
+DEBUG: number of correlated_anomalies_nodes 121
+In seed number 13, number of remaining anomalous nodes is 32
+Debug: seed node is acbef75c9a9a669a041eb3d0190f4fc4-process
+subgraph is less than  3 nodes
+The traverse time is:  0.003973722457885742 seconds.
+DEBUG: number of correlated_anomalies_nodes 121
+In seed number 14, number of remaining anomalous nodes is 32
+Debug: seed node is c8325076808e92422e4cb64ebe6c1525-process
+subgraph is less than  3 nodes
+The traverse time is:  0.00015926361083984375 seconds.
+DEBUG: number of correlated_anomalies_nodes 121
+In seed number 15, number of remaining anomalous nodes is 32
+Debug: seed node is 5377560cff056698bc3091463410fcbe-process
+subgraph is less than  3 nodes
+The traverse time is:  0.003618478775024414 seconds.
+DEBUG: number of correlated_anomalies_nodes 121
+In seed number 16, number of remaining anomalous nodes is 32
+Debug: seed node is f78b7784a069961f9f5b96db152baf43-process
+subgraph is less than  3 nodes
+The traverse time is:  0.002653360366821289 seconds.
+DEBUG: number of correlated_anomalies_nodes 121
+In seed number 17, number of remaining anomalous nodes is 32
+Debug: seed node is 06831db0d999f270e8bf28793294ff34-process
+subgraph is less than  3 nodes
+The traverse time is:  0.0028541088104248047 seconds.
+DEBUG: number of correlated_anomalies_nodes 121
+In seed number 18, number of remaining anomalous nodes is 32
+Debug: seed node is e42de9d84a8fadfc5228772245e463a5-process
+subgraph is less than  3 nodes
+The traverse time is:  0.002367258071899414 seconds.
+DEBUG: number of correlated_anomalies_nodes 121
+In seed number 19, number of remaining anomalous nodes is 32
+Debug: seed node is 2b20575053ace81c2d99ab8e16c61e0b-process
+subgraph is less than  3 nodes
+The traverse time is:  0.0019545555114746094 seconds.
+DEBUG: number of correlated_anomalies_nodes 121
+In seed number 20, number of remaining anomalous nodes is 32
+The total traverse time is:  0.10048270225524902 seconds.
+Number of subgraphs before removing duplication 6
+Number of removed duplicated subgraphs is 0
+Number of constructed subgraphs: 6
+Number of correlated anomalies nodes: 97
+Number of disconnected nodes 32
+--------------------------------------
+subgraph 0 actions are between: 2022-04-08 14:11:13  and  2022-04-08 15:12:57
+Number of Nodes: 5 , Number of edges: 5
+--------------------------------------
+subgraph 1 actions are between: 2022-04-08 18:33:51  and  2022-04-09 12:59:33
+Number of Nodes: 8 , Number of edges: 41
+--------------------------------------
+subgraph 2 actions are between: 2022-04-08 13:34:05  and  2022-04-08 13:34:57
+Number of Nodes: 4 , Number of edges: 3
+--------------------------------------
+subgraph 3 actions are between: 2022-04-08 15:08:38  and  2022-04-08 15:08:38
+Number of Nodes: 3 , Number of edges: 2
+--------------------------------------
+subgraph 4 actions are between: 2022-04-08 13:00:07  and  2022-04-09 17:35:58
+Number of Nodes: 95 , Number of edges: 567
+--------------------------------------
+subgraph 5 actions are between: 2022-04-08 13:00:06  and  2022-04-08 15:34:09
+Number of Nodes: 8 , Number of edges: 4999
+----------------------------------------
+
+Total Number of Predicted Anomalies Nodes in correlated subgraphs 97
+Total Number of Predicted Anomalies, Labeled Malicious Nodes in correlated subgraphs 9
+Total Number of Predicted Anomalies, Labeled Benign Nodes in correlated subgraphs 88
+
+Total Number of Predicted Normal Nodes in correlated subgraphs 24
+Total Number of Predicted Normal, Labeled Malicious Nodes in correlated subgraphs 0
+Total Number of Predicted Normal, Labeled Benign Nodes in correlated subgraphs 24
+       number_of_nodes  number_of_edges  subgraph_anomaly_score
+count         6.000000         6.000000                6.000000
+mean         20.500000       936.166667                4.276011
+std          36.555437      2002.736170                5.679586
+min           3.000000         2.000000                0.748097
+25%           4.250000         3.500000                1.611016
+50%           6.500000        23.000000                2.180557
+75%           8.000000       435.500000                3.090380
+max          95.000000      4999.000000               15.732029
+Evaluate Node anomaly detection after subgraph construction (with all anomalous subgraphs) 
+Evaluate with abnormality level: Moderate
+evaluate with anomalous subgraphs that has ['Moderate', 'Significant', 'Critical'] severity levels 
+Number of subgraphs is  1
+
+*******************************************
+TP: 161, FP: 9, FN: 1, TN: 14492
+Precision: 0.947, Recall: 0.994, Fscore: 0.97
+MCC: 0.97
+Computed related nodes in  19.891718864440918
+
+*******************************************
+The subgraph construction time is:  19.31905460357666 seconds.
+The subgraph detection time is:  19.35058879852295 seconds.
+None
+Memory usage (ru_maxrss) :  3107.3984375  MB
+Memory usage (psutil) :  2662.27734375 MB
+The CPU usage is (per process):  0.0
+The CPU usage is :  10.9954833984375
+used virtual memory GB: 11.90921401977539  percent 42.2
+Check IOCs in disconnected anomalies nodes
+doesn't cover any attack IOCs
+________________________________________________
+Check IOCs in anomalies nodes correlated into subgraphs
+Number of covered IOCS of attack APT29  is: 2
+The covered IOCS are: {'192.168.0.74,124.223.85.207/32', 'C:/Users/Administrator/Desktop/shell/HookSSLX64.dll'}
+Number of covered IOCS of attack FIN6  is: 2
+The covered IOCS are: {'192.168.0.74,124.223.85.207/32', 'C:/Users/Administrator/Desktop/shell/HookSSLX64.dll'}
+Number of covered IOCS of attack Sidewinder  is: 2
+The covered IOCS are: {'certutil', '192.168.0.74,124.223.85.207/32'}
+The total number of covered IOCs is 3
+________________________________________________
+investigating subgraph:  0
+The covered IOCS of attack APT29 are: {'C:/Users/Administrator/Desktop/shell/HookSSLX64.dll'}
+The Subgraph has 0.071 percent of  APT29  Query Graph IOCs
+The covered IOCS of attack FIN6 are: {'C:/Users/Administrator/Desktop/shell/HookSSLX64.dll'}
+The Subgraph has 0.083 percent of  FIN6  Query Graph IOCs
+investigating subgraph:  1
+The subgraph doesn't cover any attack IOCs
+investigating subgraph:  2
+The subgraph doesn't cover any attack IOCs
+investigating subgraph:  3
+The subgraph doesn't cover any attack IOCs
+investigating subgraph:  4
+The covered IOCS of attack Sidewinder are: {'certutil'}
+The Subgraph has 0.125 percent of  Sidewinder  Query Graph IOCs
+investigating subgraph:  5
+The covered IOCS of attack APT29 are: {'192.168.0.74,124.223.85.207/32'}
+The Subgraph has 0.071 percent of  APT29  Query Graph IOCs
+The covered IOCS of attack FIN6 are: {'192.168.0.74,124.223.85.207/32'}
+The Subgraph has 0.083 percent of  FIN6  Query Graph IOCs
+The covered IOCS of attack Sidewinder are: {'192.168.0.74,124.223.85.207/32'}
+The Subgraph has 0.125 percent of  Sidewinder  Query Graph IOCs
+Number of covered IOCs correlated into subgraphs : 3
+Covered IOCs in all constructed subgraphs {'certutil', '192.168.0.74,124.223.85.207/32', 'C:/Users/Administrator/Desktop/shell/HookSSLX64.dll'}
+
+************************************************************
+Average performance across all runs:
+       accuracy  precision    recall  f_measure     tp       tn   fp   fn       tpr       fpr       mcc  subgraph_detection_time  memory_usage_mb
+count  1.000000   1.000000  1.000000    1.00000    1.0      1.0  1.0  1.0  1.000000  1.000000  1.000000                 1.000000         1.000000
+mean   0.999318   0.947059  0.993827    0.96988  161.0  14492.0  9.0  1.0  0.993827  0.000621  0.969823                19.350589      3107.398438
+std         NaN        NaN       NaN        NaN    NaN      NaN  NaN  NaN       NaN       NaN       NaN                      NaN              NaN
+min    0.999318   0.947059  0.993827    0.96988  161.0  14492.0  9.0  1.0  0.993827  0.000621  0.969823                19.350589      3107.398438
+25%    0.999318   0.947059  0.993827    0.96988  161.0  14492.0  9.0  1.0  0.993827  0.000621  0.969823                19.350589      3107.398438
+50%    0.999318   0.947059  0.993827    0.96988  161.0  14492.0  9.0  1.0  0.993827  0.000621  0.969823                19.350589      3107.398438
+75%    0.999318   0.947059  0.993827    0.96988  161.0  14492.0  9.0  1.0  0.993827  0.000621  0.969823                19.350589      3107.398438
+max    0.999318   0.947059  0.993827    0.96988  161.0  14492.0  9.0  1.0  0.993827  0.000621  0.969823                19.350589      3107.398438
+Total time:  46.03143334388733 seconds.

@@ -81,7 +81,7 @@ abnormality="Moderate"
 
 
 
-transfor_to_RDF () {
+transform_to_RDF () {
   dataset=$1
   host=$2
   root_path=$3
@@ -89,7 +89,7 @@ transfor_to_RDF () {
 
   if [[ "$dataset" == "tc3" ]]
   then
-    read -p "Do you want to get node attributes from NetworkX graph(y/N): ": node_attrs_graph_nx
+    read -p "Do you want to get node attributes from NetworkX graph (y/N): ": node_attrs_graph_nx
   fi
   python -B -u ../src/transform_to_RDF.py --dataset ${dataset} --host ${host} --root-path ${root_path} --source-graph ${source_graph} ${rdf_parameter} >> ../logs/${host}/${exp_name}/Transform_to_RDF_${date}.txt
   if [[ "$node_attrs_graph_nx" == "y" ]]
@@ -214,7 +214,7 @@ execute_OCR_APT () {
   if [[ "$ToRDF" == "y" ]]
   then
     echo "Converting to RDF"
-    transfor_to_RDF ${dataset} ${host} ${root_path}
+    transform_to_RDF ${dataset} ${host} ${root_path}
     echo "load RDFs provenance graphs into the RDF graph engine"
     read -p "Have you loaded provenance graphs into the database (y/N): " PG_loaded
   else
