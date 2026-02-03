@@ -1,0 +1,3 @@
+{
+    "Plain_PowerShell_Empire": {"file":["runme.bat"],"process":["wmiprvse.exe","powershell.exe","lsass.exe"],"ip": ["132.197.158.98","142.20.56.202"]}
+}
